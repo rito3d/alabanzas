@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10131a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Alabanzas MMM</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono.svg">
+<link rel="apple-touch-icon" href="icono.svg">
+<link rel="stylesheet" href="estilo.css">
+<style>
+  main { max-width: 760px; margin: 0 auto; padding: 14px 14px 100px; }
+  .buscador { display: flex; gap: 8px; margin-bottom: 10px; }
+  .filtros { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
+  .filtros button { flex: none; border-radius: 99px; padding: 7px 14px; font-size: 14px; }
+  .cancion { display: flex; gap: 12px; align-items: center; padding: 13px 14px; margin-bottom: 8px; cursor: pointer; }
+  .cancion .info { flex: 1; min-width: 0; }
+  .cancion .tit { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cancion .sub { font-size: 14px; color: var(--tenue); margin-top: 2px; }
+  .tono { font-weight: 700; color: var(--acento); font-size: 15px; min-width: 34px; text-align: center; }
+  .encult { color: var(--ok); font-size: 12px; font-weight: 600; }
+  .flotante { position: fixed; right: 18px; bottom: 22px; border-radius: 99px; padding: 15px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 17px; }
+  .ayuda { font-size: 13px; color: var(--tenue); background: var(--panel); border: 1px dashed var(--borde); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.5; }
+  .ayuda code { color: var(--acento); }
+  .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .acciones button { flex: 1; }
+  .ver-cab h2 { margin: 6px 0 2px; font-size: 22px; }
+  .herram { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+  .herram .tonoactual { min-width: 56px; text-align: center; font-weight: 700; color: var(--acento); }
+  #vistaLetra { font-size: 16px; }
+  .vacio { text-align: center; color: var(--tenue); padding: 40px 10px; }
+  #textoLetra { min-height: 340px; }
+  .diap-prev { display: grid; gap: 8px; margin-top: 10px; }
+  .diap-prev div { background: #000; border-radius: 8px; padding: 10px; text-align: center; font-size: 14px; line-height: 1.4; }
+  .diap-prev small { display: block; color: var(--acento2); font-size: 11px; margin-bottom: 4px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<header class="barra">
+  <button id="btnAtras" class="chico oculto">‹ Volver</button>
+  <h1 id="tituloBarra">🎵 Alabanzas MMM</h1>
+  <a href="musicos.html" class="chico" style="text-decoration:none;font-size:14px" title="Vista de músicos">🎸 Músicos</a>
+  <span class="punto" id="conexion" title="Verde: conectado · Rojo: sin internet (se guarda y se sube después)"></span>
+</header>
+
+<main>
+  <!-- ======= LISTA ======= -->
+  <section id="pantallaLista">
+    <div class="buscador">
+      <input id="buscar" type="search" placeholder="Buscar alabanza, hermano o letra…">
+    </div>
+    <div class="filtros" id="filtros">
+      <button data-f="todas" class="activo">Todas</button>
+      <button data-f="culto">⭐ Culto de hoy</button>
+      <button data-f="mias">🙋 Las mías</button>
+    </div>
+    <div id="lista"></div>
+    <div style="text-align:center;margin-top:30px"><a href="#salir" class="tenue" style="font-size:13px">Cerrar sesión</a></div>
+    <button class="prim flotante" id="btnNueva">＋ Nueva alabanza</button>
+  </section>
+
+  <!-- ======= VER ======= -->
+  <section id="pantallaVer" class="oculto">
+    <div class="ver-cab">
+      <h2 id="verTitulo"></h2>
+      <div class="tenue" id="verSub"></div>
+    </div>
+    <div class="herram">
+      <span class="tenue">Tono:</span>
+      <button class="chico" id="bajar">−½</button>
+      <span class="tonoactual" id="tonoActual"></span>
+      <button class="chico" id="subir">+½</button>
+      <button class="chico" id="notacion" title="Cambiar notación">Do/C</button>
+      <span style="flex:1"></span>
+      <button class="chico" id="letraMenos">A−</button>
+      <button class="chico" id="letraMas">A+</button>
+    </div>
+    <div class="tarjeta vista-acordes" id="vistaLetra"></div>
+    <div class="tenue" id="verNotas" style="margin-top:10px"></div>
+    <div class="acciones">
+      <button id="btnCulto">⭐ Agregar al culto</button>
+      <button id="btnEditar" class="prim">✏️ Editar</button>
+    </div>
+  </section>
+
+  <!-- ======= EDITOR ======= -->
+  <section id="pantallaEditor" class="oculto">
+    <label>Nombre de la alabanza *</label>
+    <input id="fTitulo" placeholder="Ej: Cuán grande es Él" autocomplete="off">
+    <div class="fila">
+      <div><label>Quién la canta</label><input id="fCantante" placeholder="Hno. / Hna." list="listaCantantes" autocomplete="off"></div>
+      <div style="flex:.5"><label>Tono</label><input id="fTono" placeholder="Ej: G o Sol" autocomplete="off"></div>
+    </div>
+    <datalist id="listaCantantes"></datalist>
+    <label>Autor (opcional)</label>
+    <input id="fAutor" placeholder="Autor o ministerio" autocomplete="off">
+
+    <label>Letra con acordes</label>
+    <textarea id="textoLetra" spellcheck="false" placeholder="Verso 1:
+G              D
+Cuán grande es Él, mi Dios
+Em          C
+Lo alabaré por siempre
+
+Coro:
+G       D
+Santo, santo…"></textarea>
+    <div class="ayuda">
+      • Deja <b>una línea en blanco</b> entre cada parte: cada parte será una pantalla en la LED.<br>
+      • Pon los acordes <b>en la línea de arriba</b> de la letra, o dentro de corchetes: <code>[G]Cuán grande es [D]Él</code><br>
+      • Sirven <code>G D Em C7 F#m Bb/D</code> y también <code>Sol Re Mim Do</code>.<br>
+      • Puedes titular partes: <code>Verso 1:</code> <code>Coro:</code> <code>Puente:</code> o <code>[Coro]</code>.<br>
+      • Los acordes <b>no salen en la pantalla LED</b>, solo en la vista de músicos.
+    </div>
+    <label>Notas para los músicos (opcional)</label>
+    <input id="fNotas" placeholder="Ej: Coro 2 veces, final lento" autocomplete="off">
+
+    <label>Así se verá en la pantalla LED</label>
+    <div class="diap-prev" id="previa"></div>
+
+    <div class="acciones">
+      <button class="peligro oculto" id="btnBorrar">🗑 Borrar</button>
+      <button id="btnCancelar">Cancelar</button>
+      <button class="prim" id="btnGuardar">💾 Guardar</button>
+    </div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="comun.js"></script>
+<script type="module">
+import './nube.js';
+
+let canciones = [], estado = { listaCulto: [] }, filtro = 'todas';
+let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista';
+const $ = id => document.getElementById(id);
+
+function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function leerLocal(k) { try { return localStorage.getItem(k); } catch { return null; } }
+let miNombre = leerLocal('miNombre') || '';
+
+function mostrar(p) {
+  pantalla = p;
+  for (const s of ['Lista', 'Ver', 'Editor']) $('pantalla' + s).classList.toggle('oculto', s.toLowerCase() !== p);
+  $('btnAtras').classList.toggle('oculto', p === 'lista');
+  $('tituloBarra').textContent = p === 'lista' ? '🎵 Alabanzas MMM' : p === 'ver' ? 'Alabanza' : (actual ? 'Editar alabanza' : 'Nueva alabanza');
+  window.scrollTo(0, 0);
+}
+$('btnAtras').onclick = () => {
+  if (pantalla === 'editor' && actual) return abrir(actual.id);
+  mostrar('lista'); pintarLista();
+};
+
+// ---------- Lista ----------
+function pintarLista() {
+  const q = normalizar($('buscar').value);
+  let l = canciones.slice();
+  if (filtro === 'culto') l = estado.listaCulto.map(id => canciones.find(c => c.id === id)).filter(Boolean);
+  else l.sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  if (filtro === 'mias') l = l.filter(c => miNombre && normalizar(c.cantante).includes(normalizar(miNombre)));
+  if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante + ' ' + c.autor + ' ' + c.letra).includes(q));
+  const cont = $('lista');
+  if (!l.length) {
+    cont.innerHTML = `<div class="vacio">${filtro === 'mias' && !miNombre ? 'Guarda una alabanza con tu nombre en “Quién la canta” para verlas aquí.' : filtro === 'culto' ? 'Todavía no hay alabanzas en el culto de hoy.' : 'No hay alabanzas todavía.<br>Toca “＋ Nueva alabanza”.'}</div>`;
+    return;
+  }
+  cont.innerHTML = l.map(c => `
+    <div class="tarjeta cancion" data-id="${c.id}">
+      <div class="tono">${escaparHTML(c.tono || '·')}</div>
+      <div class="info">
+        <div class="tit">${escaparHTML(c.titulo)}</div>
+        <div class="sub">${c.cantante ? '🎤 ' + escaparHTML(c.cantante) : '<span class="tenue">Sin cantante</span>'}
+          ${estado.listaCulto.includes(c.id) ? ' · <span class="encult">⭐ Culto</span>' : ''}</div>
+      </div>
+      <span class="tenue">›</span>
+    </div>`).join('');
+  cont.querySelectorAll('.cancion').forEach(el => el.onclick = () => abrir(el.dataset.id));
+}
+$('buscar').oninput = pintarLista;
+$('filtros').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  filtro = b.dataset.f;
+  if (filtro === 'mias' && !miNombre) {
+    const n = prompt('¿Cuál es tu nombre? (como lo escribes en “Quién la canta”)');
+    if (n) { miNombre = n.trim(); guardarLocal('miNombre', miNombre); }
+  }
+  $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x === b));
+  pintarLista();
+};
+
+// ---------- Ver ----------
+function abrir(id) {
+  actual = canciones.find(c => c.id === id);
+  if (!actual) { mostrar('lista'); return pintarLista(); }
+  pasos = 0; latino = undefined;
+  pintarVer(); mostrar('ver');
+}
+function pintarVer() {
+  const c = actual;
+  $('verTitulo').textContent = c.titulo;
+  $('verSub').textContent = [c.cantante && '🎤 ' + c.cantante, c.autor].filter(Boolean).join(' · ');
+  $('tonoActual').textContent = c.tono ? transponerAcorde(c.tono, pasos, latino) : (pasos > 0 ? '+' : '') + pasos;
+  const secs = analizarLetra(c.letra);
+  $('vistaLetra').innerHTML = secs.length ? secs.map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latino)}</div>`).join('') : '<span class="tenue">Sin letra</span>';
+  $('vistaLetra').style.fontSize = tamLetra + 'px';
+  $('verNotas').textContent = c.notas ? '📝 ' + c.notas : '';
+  const enCulto = estado.listaCulto.includes(c.id);
+  $('btnCulto').textContent = enCulto ? '✖ Quitar del culto' : '⭐ Agregar al culto';
+}
+$('subir').onclick = () => { pasos++; pintarVer(); };
+$('bajar').onclick = () => { pasos--; pintarVer(); };
+$('notacion').onclick = () => { latino = latino === undefined ? true : latino ? false : undefined; $('notacion').textContent = latino === undefined ? 'Do/C' : latino ? 'Do' : 'C'; pintarVer(); };
+$('letraMas').onclick = () => { tamLetra = Math.min(30, tamLetra + 2); pintarVer(); };
+$('letraMenos').onclick = () => { tamLetra = Math.max(11, tamLetra - 2); pintarVer(); };
+$('btnCulto').onclick = async () => {
+  const lista = estado.listaCulto.slice();
+  const i = lista.indexOf(actual.id);
+  if (i >= 0) lista.splice(i, 1); else lista.push(actual.id);
+  estado = await API.cambiarEstado({ listaCulto: lista });
+  aviso(i >= 0 ? 'Quitada del culto' : 'Agregada al culto de hoy ⭐');
+  pintarVer();
+};
+$('btnEditar').onclick = () => editar(actual);
+
+// ---------- Editor ----------
+function editar(c) {
+  actual = c || null;
+  $('fTitulo').value = c ? c.titulo : '';
+  $('fCantante').value = c ? c.cantante : miNombre;
+  $('fTono').value = c ? c.tono : '';
+  $('fAutor').value = c ? c.autor : '';
+  $('fNotas').value = c ? c.notas : '';
+  $('textoLetra').value = c ? c.letra : '';
+  $('btnBorrar').classList.toggle('oculto', !c);
+  const nombres = [...new Set(canciones.map(x => x.cantante).filter(Boolean))].sort();
+  $('listaCantantes').innerHTML = nombres.map(n => `<option value="${escaparHTML(n)}">`).join('');
+  pintarPrevia();
+  mostrar('editor');
+}
+function pintarPrevia() {
+  const d = diapositivas({ letra: $('textoLetra').value });
+  $('previa').innerHTML = d.length ? d.map((x, i) => `<div><small>${i + 1}${x.etiqueta ? ' · ' + escaparHTML(x.etiqueta) : ''}</small>${x.texto.map(escaparHTML).join('<br>')}</div>`).join('') : '<span class="tenue">Escribe la letra para ver las pantallas…</span>';
+}
+$('textoLetra').oninput = pintarPrevia;
+$('btnNueva').onclick = () => editar(null);
+$('btnCancelar').onclick = () => actual ? abrir(actual.id) : (mostrar('lista'), pintarLista());
+$('btnGuardar').onclick = async () => {
+  const datos = {
+    id: actual && actual.id,
+    titulo: $('fTitulo').value, cantante: $('fCantante').value, tono: $('fTono').value,
+    autor: $('fAutor').value, notas: $('fNotas').value, letra: $('textoLetra').value
+  };
+  if (!datos.titulo.trim()) { aviso('Escribe el nombre de la alabanza', true); return $('fTitulo').focus(); }
+  $('btnGuardar').disabled = true;
+  try {
+    const g = await API.guardarCancion(datos);
+    if (datos.cantante.trim() && !miNombre) { miNombre = datos.cantante.trim(); guardarLocal('miNombre', miNombre); }
+    canciones = await API.canciones();
+    aviso('Guardada ✔ Se copiará sola a la PC de la iglesia');
+    abrir(g.id);
+  } catch (e) { aviso('No se pudo guardar: ' + e.message, true); }
+  $('btnGuardar').disabled = false;
+};
+$('btnBorrar').onclick = async () => {
+  if (!actual || !confirm(`¿Borrar “${actual.titulo}” para siempre?`)) return;
+  await API.borrarCancion(actual.id);
+  canciones = await API.canciones(); actual = null;
+  aviso('Alabanza borrada'); mostrar('lista'); pintarLista();
+};
+
+// ---------- Inicio y tiempo real ----------
+async function cargar() {
+  try { [canciones, estado] = await Promise.all([API.canciones(), API.estado()]); } catch {}
+  pintarLista();
+}
+escucharEventos({
+  conexion: ok => $('conexion').classList.toggle('on', ok),
+  estado: e => { estado = e; if (pantalla === 'lista') pintarLista(); if (pantalla === 'ver') pintarVer(); },
+  canciones: async () => {
+    canciones = await API.canciones();
+    if (pantalla === 'lista') pintarLista();
+    if (pantalla === 'ver' && actual) { actual = canciones.find(c => c.id === actual.id) || actual; pintarVer(); }
+  }
+});
+cargar();
+</script>
+</body>
+</html>

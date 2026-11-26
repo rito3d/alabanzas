@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#10131a">
+<title>Músicos — Alabanzas MMM</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icono.svg">
+<link rel="apple-touch-icon" href="icono.svg">
+<link rel="stylesheet" href="estilo.css">
+<style>
+  main { max-width: 900px; margin: 0 auto; padding: 12px 14px 80px; }
+  .cab h2 { margin: 4px 0 2px; font-size: 24px; }
+  .herram { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 10px 0 12px; }
+  .tonoactual { min-width: 60px; text-align: center; font-weight: 800; color: var(--acento); font-size: 18px; }
+  #letra { font-size: 18px; }
+  .siguiente { margin-top: 14px; font-size: 15px; }
+  .vacio { text-align: center; color: var(--tenue); padding: 60px 10px; font-size: 18px; }
+  select { width: auto; max-width: 55vw; padding: 8px 10px; }
+</style>
+</head>
+<body>
+<header class="barra">
+  <h1>🎸 Músicos</h1>
+  <select id="elegir"><option value="">🔴 Seguir en vivo</option></select>
+  <span class="punto" id="conexion"></span>
+</header>
+<main>
+  <div class="cab">
+    <h2 id="titulo">Esperando alabanza…</h2>
+    <div class="tenue" id="sub"></div>
+  </div>
+  <div class="herram">
+    <span class="tenue">Tono:</span>
+    <button class="chico" id="bajar">−½</button>
+    <span class="tonoactual" id="tono">—</span>
+    <button class="chico" id="subir">+½</button>
+    <button class="chico" id="notacion">Do/C</button>
+    <span style="flex:1"></span>
+    <button class="chico" id="menos">A−</button>
+    <button class="chico" id="mas">A+</button>
+  </div>
+  <div class="tarjeta vista-acordes" id="letra"><div class="vacio">Cuando el control ponga una alabanza en la pantalla, aparecerá aquí con sus acordes.</div></div>
+  <div class="tenue" id="notas" style="margin-top:10px"></div>
+  <div class="tarjeta siguiente" id="siguiente"></div>
+</main>
+<script src="config.js"></script>
+<script src="comun.js"></script>
+<script type="module">
+import './nube.js';
+
+const $ = id => document.getElementById(id);
+let canciones = [], estado = { listaCulto: [] }, manual = '', pasos = {}, latino, tam = 18, ultimaSec = -1, ultimaId = null;
+try { tam = +localStorage.getItem('tamMusicos') || 18; } catch {}
+
+function pintarSelector() {
+  const culto = estado.listaCulto.map(id => canciones.find(c => c.id === id)).filter(Boolean);
+  const resto = canciones.filter(c => !estado.listaCulto.includes(c.id)).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  const op = c => `<option value="${c.id}" ${c.id === manual ? 'selected' : ''}>${escaparHTML(c.titulo)}</option>`;
+  $('elegir').innerHTML = `<option value="">🔴 Seguir en vivo</option>` +
+    (culto.length ? `<optgroup label="⭐ Culto de hoy">${culto.map(op).join('')}</optgroup>` : '') +
+    `<optgroup label="Todas">${resto.map(op).join('')}</optgroup>`;
+}
+$('elegir').onchange = () => { manual = $('elegir').value; ultimaSec = -1; pintar(); };
+
+function pintar() {
+  const id = manual || estado.cancionId;
+  const c = canciones.find(x => x.id === id);
+  if (!c) {
+    $('titulo').textContent = 'Esperando alabanza…'; $('sub').textContent = ''; $('tono').textContent = '—';
+    $('letra').innerHTML = '<div class="vacio">Cuando el control ponga una alabanza en la pantalla, aparecerá aquí con sus acordes.</div>';
+    $('notas').textContent = ''; pintarSiguiente(null); return;
+  }
+  const p = pasos[c.id] || 0;
+  $('titulo').textContent = c.titulo;
+  $('sub').textContent = [c.cantante && '🎤 ' + c.cantante, c.autor].filter(Boolean).join(' · ');
+  $('tono').textContent = c.tono ? transponerAcorde(c.tono, p, latino) : (p > 0 ? '+' : '') + p;
+  const secs = analizarLetra(c.letra);
+  // qué sección corresponde a la pantalla en vivo
+  const conLetra = secs.map((s, i) => s.lineas.some(l => l.letra.trim()) ? i : -1).filter(i => i >= 0);
+  const enVivo = !manual || manual === estado.cancionId;
+  const secActual = enVivo && c.id === estado.cancionId ? conLetra[estado.seccion] : -1;
+  $('letra').innerHTML = secs.map((s, i) => `<div class="sec ${i === secActual ? 'actual' : ''}" id="sec${i}">${htmlSeccionAcordes(s, p, latino)}</div>`).join('') || '<span class="tenue">Sin letra</span>';
+  $('letra').style.fontSize = tam + 'px';
+  $('notas').textContent = c.notas ? '📝 ' + c.notas : '';
+  if (secActual >= 0 && (secActual !== ultimaSec || c.id !== ultimaId)) {
+    const el = $('sec' + secActual);
+    el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  ultimaSec = secActual; ultimaId = c.id;
+  pintarSiguiente(c);
+}
+function pintarSiguiente(c) {
+  const i = c ? estado.listaCulto.indexOf(c.id) : -1;
+  const sig = i >= 0 && canciones.find(x => x.id === estado.listaCulto[i + 1]);
+  $('siguiente').classList.toggle('oculto', !sig);
+  if (sig) $('siguiente').innerHTML = `<span class="tenue">Después:</span> <b>${escaparHTML(sig.titulo)}</b> ${sig.tono ? '· <span style="color:var(--acento)">' + escaparHTML(sig.tono) + '</span>' : ''} ${sig.cantante ? '· 🎤 ' + escaparHTML(sig.cantante) : ''}`;
+}
+const idActual = () => manual || estado.cancionId;
+$('subir').onclick = () => { const id = idActual(); if (id) { pasos[id] = (pasos[id] || 0) + 1; pintar(); } };
+$('bajar').onclick = () => { const id = idActual(); if (id) { pasos[id] = (pasos[id] || 0) - 1; pintar(); } };
+$('notacion').onclick = () => { latino = latino === undefined ? true : latino ? false : undefined; $('notacion').textContent = latino === undefined ? 'Do/C' : latino ? 'Do' : 'C'; pintar(); };
+const guardarTam = () => { try { localStorage.setItem('tamMusicos', tam); } catch {} };
+$('mas').onclick = () => { tam = Math.min(34, tam + 2); guardarTam(); pintar(); };
+$('menos').onclick = () => { tam = Math.max(11, tam - 2); guardarTam(); pintar(); };
+
+escucharEventos({
+  conexion: ok => $('conexion').classList.toggle('on', ok),
+  estado: e => { estado = e; pintarSelector(); pintar(); },
+  canciones: async () => { canciones = await API.canciones(); pintarSelector(); pintar(); }
+});
+API.canciones().then(c => { canciones = c; pintarSelector(); pintar(); });
+</script>
+</body>
+</html>

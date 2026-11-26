@@ -1,0 +1,52 @@
+:root {
+  --fondo: #10131a; --panel: #1a1f2b; --panel2: #232a39; --borde: #2f3849;
+  --texto: #eef1f6; --tenue: #9aa4b8; --acento: #f2b134; --acento2: #4fb6ff;
+  --peligro: #ff5d5d; --ok: #3ecf8e; --radio: 12px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--fondo); color: var(--texto); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 16px; }
+a { color: var(--acento2); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button {
+  background: var(--panel2); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 14px;
+  cursor: pointer; transition: background .15s, border-color .15s; white-space: nowrap;
+}
+button:hover { border-color: var(--tenue); }
+button.prim { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 600; }
+button.peligro { color: var(--peligro); }
+button.activo { background: var(--acento2); color: #04121d; border-color: var(--acento2); font-weight: 600; }
+button.chico { padding: 6px 10px; font-size: 14px; }
+input, select, textarea {
+  width: 100%; background: var(--panel2); border: 1px solid var(--borde); border-radius: 10px; padding: 11px 12px; outline: none;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--acento); }
+textarea { font-family: ui-monospace, Consolas, "Courier New", monospace; font-size: 15px; line-height: 1.45; resize: vertical; }
+label { display: block; font-size: 13px; color: var(--tenue); margin: 14px 0 6px; }
+.fila { display: flex; gap: 10px; align-items: center; }
+.fila > * { flex: 1; }
+.oculto { display: none !important; }
+.tenue { color: var(--tenue); }
+header.barra {
+  position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; background: rgba(16,19,26,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--borde);
+}
+header.barra h1 { font-size: 18px; margin: 0; flex: 1; }
+.punto { width: 10px; height: 10px; border-radius: 50%; background: var(--peligro); flex: none; }
+.punto.on { background: var(--ok); }
+.tarjeta { background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 14px; }
+.etiqueta-chip { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--panel2); color: var(--tenue); border: 1px solid var(--borde); }
+
+/* vista con acordes */
+.vista-acordes { font-family: ui-monospace, Consolas, "Courier New", monospace; white-space: pre; overflow-x: auto; line-height: 1.25; }
+.vista-acordes .etq { font-family: system-ui, sans-serif; font-weight: 700; color: var(--acento2); margin: 18px 0 6px; text-transform: uppercase; font-size: .8em; letter-spacing: .06em; }
+.vista-acordes .acordes { color: var(--acento); font-weight: 700; }
+.vista-acordes .letra { margin-bottom: 4px; }
+.vista-acordes .sec { padding: 4px 10px 8px; border-left: 4px solid transparent; border-radius: 6px; }
+.vista-acordes .sec.actual { border-left-color: var(--acento); background: rgba(242,177,52,.08); }
+
+#aviso {
+  position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 30px); opacity: 0; pointer-events: none;
+  background: var(--ok); color: #03140c; padding: 12px 18px; border-radius: 10px; font-weight: 600; transition: .25s; z-index: 99;
+}
+#aviso.visible { opacity: 1; transform: translate(-50%, 0); }
+#aviso.error { background: var(--peligro); color: #fff; }
