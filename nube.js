@@ -72,10 +72,11 @@ for (let intento = 0; ; intento++) {
 }
 
 const colCanciones = collection(db, 'grupos', codigo, 'canciones');
+const colEstado = collection(db, 'grupos', codigo, 'estado'); // aquí viven: envivo, info, cultos (c_…) y turnos (t_…)
 const docCulto = doc(db, 'grupos', codigo, 'estado', 'culto');
-const docEnVivo = doc(db, 'grupos', codigo, 'estado', 'envivo');
 
-let canciones = [], todas = new Map(), estado = { listaCulto: [], cancionId: null, seccion: 0 };
+let canciones = [], todas = new Map(), estado = { listaCulto: [], cancionId: null, seccion: 0, cantante: '' };
+let progDocs = new Map();
 const oyentes = [];
 const disparar = (tipo, datos) => { for (const m of oyentes) if (m[tipo]) { try { m[tipo](datos); } catch (e) { console.error(e); } } };
 const fallo = e => { console.error(e); window.aviso && aviso('No se pudo guardar en la nube: ' + (e.code || e.message), true); };
@@ -90,15 +91,26 @@ onSnapshot(colCanciones, { includeMetadataChanges: true }, snap => {
   disparar('conexion', !snap.metadata.fromCache);
 }, e => { console.error(e); listoCanciones(); disparar('conexion', false); });
 
-onSnapshot(docCulto, s => {
-  const d = s.data() || {};
-  estado.listaCulto = Array.isArray(d.lista) ? d.lista : [];
-  disparar('estado', { ...estado });
-});
-onSnapshot(docEnVivo, s => {
-  const d = s.data() || {};
-  estado.cancionId = d.cancionId || null; estado.seccion = +d.seccion || 0;
-  disparar('estado', { ...estado });
+function programaVisible() {
+  const cultos = [], turnos = [], participaciones = [];
+  for (const [id, d] of progDocs) {
+    if (d.borrada) continue;
+    if (id.startsWith('c_')) cultos.push({ id, fecha: d.fecha || '', nombre: d.nombre || 'Culto', actualizada: d.actualizada || '' });
+    else if (id.startsWith('t_')) turnos.push({ id, cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', orden: Number(d.orden) || 0, actualizada: d.actualizada || '' });
+    else participaciones.push({ id, cultoId: d.cultoId, nombre: d.nombre || '', rol: d.rol || '', actualizada: d.actualizada || '' });
+  }
+  const ids = new Set(cultos.map(c => c.id));
+  return { cultos: cultos.sort((a, b) => a.fecha.localeCompare(b.fecha)), turnos: turnos.filter(t => ids.has(t.cultoId) && canciones.some(c => c.id === t.cancionId)), participaciones: participaciones.filter(x => ids.has(x.cultoId)) };
+}
+onSnapshot(colEstado, snap => {
+  let cambioProg = false, cambioEstado = false;
+  for (const ch of snap.docChanges()) {
+    const id = ch.doc.id, d = ch.doc.data() || {};
+    if (/^(c_|t_|p_)/.test(id)) { if (ch.type === 'removed') progDocs.delete(id); else progDocs.set(id, d); cambioProg = true; }
+    else if (id === 'envivo') { estado.cancionId = d.cancionId || null; estado.seccion = +d.seccion || 0; estado.cantante = d.cantante || ''; estado.tono = d.tono || ''; cambioEstado = true; }
+  }
+  if (cambioProg) disparar('programa', {});
+  if (cambioEstado) disparar('estado', { ...estado });
 });
 window.addEventListener('online', () => disparar('conexion', true));
 window.addEventListener('offline', () => disparar('conexion', false));
@@ -117,7 +129,34 @@ function guardarCulto(lista) {
   return { ...estado };
 }
 
+const nuevoId = pref => pref + doc(colEstado).id.slice(0, 12);
+function guardarProg(id, datos) {
+  const d = { ...datos, actualizada: new Date().toISOString() };
+  setDoc(doc(colEstado, id), { ...d, sello: serverTimestamp() }).catch(fallo);
+  progDocs.set(id, d);            // se ve al instante
+  disparar('programa', {});
+  return { id, ...d };
+}
+
 window.API = {
+  async programa() { await primeraCarga; return programaVisible(); },
+  async guardarCulto(c) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(c.fecha || ''))) throw new Error('Elige la fecha del culto');
+    return guardarProg(c.id || nuevoId('c_'), { fecha: c.fecha, nombre: String(c.nombre || 'Culto de alabanza').trim().slice(0, 80) || 'Culto de alabanza', borrada: false });
+  },
+  async borrarCulto(id) { const d = progDocs.get(id); if (d) guardarProg(id, { fecha: d.fecha, nombre: d.nombre, borrada: true }); return { ok: true }; },
+  async guardarTurno(t) {
+    const antes = t.id && progDocs.get(t.id);
+    const orden = t.orden !== undefined && t.orden !== null && t.orden !== '' ? Math.round(+t.orden) : (antes ? antes.orden : Date.now());
+    return guardarProg(t.id || nuevoId('t_'), { cultoId: t.cultoId, cancionId: t.cancionId, cantante: String(t.cantante || '').trim().slice(0, 80), tono: String(t.tono || '').trim().slice(0, 12), orden, borrada: false });
+  },
+  async borrarTurno(id) { const d = progDocs.get(id); if (d) guardarProg(id, { cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', orden: d.orden || 0, borrada: true }); return { ok: true }; },
+  async guardarParticipacion(x) {
+    const nombre = String(x.nombre || '').trim().slice(0, 80);
+    if (!nombre) throw new Error('Escribe el nombre del hermano');
+    return guardarProg(x.id || nuevoId('p_'), { cultoId: x.cultoId, nombre, rol: String(x.rol || '').trim().slice(0, 40), borrada: false });
+  },
+  async borrarParticipacion(id) { const d = progDocs.get(id); if (d) guardarProg(id, { cultoId: d.cultoId, nombre: d.nombre || '', rol: d.rol || '', borrada: true }); return { ok: true }; },
   async canciones() { await primeraCarga; return canciones.slice(); },
   async estado() { return { ...estado }; },
   async cambiarEstado(c) {

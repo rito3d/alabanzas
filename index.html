@@ -21,7 +21,7 @@
   .cancion .sub { font-size: 14px; color: var(--tenue); margin-top: 2px; }
   .tono { font-weight: 700; color: var(--acento); font-size: 15px; min-width: 34px; text-align: center; }
   .encult { color: var(--ok); font-size: 12px; font-weight: 600; }
-  .flotante { position: fixed; right: 18px; bottom: 22px; border-radius: 99px; padding: 15px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 17px; }
+  .flotante { position: fixed; right: 18px; bottom: 22px; border-radius: 99px; padding: 15px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 17px; z-index: 5; }
   .ayuda { font-size: 13px; color: var(--tenue); background: var(--panel); border: 1px dashed var(--borde); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.5; }
   .ayuda code { color: var(--acento); }
   .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
@@ -35,6 +35,44 @@
   .diap-prev { display: grid; gap: 8px; margin-top: 10px; }
   .diap-prev div { background: #000; border-radius: 8px; padding: 10px; text-align: center; font-size: 14px; line-height: 1.4; }
   .diap-prev small { display: block; color: var(--acento2); font-size: 11px; margin-bottom: 4px; text-transform: uppercase; }
+  /* cultos */
+  .culto { margin-bottom: 14px; padding: 0; overflow: hidden; }
+  .culto.hoy { border-color: var(--acento); }
+  .culto-cab { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--panel2); }
+  .culto-cab .f { flex: 1; min-width: 0; }
+  .culto-cab b { display: block; font-size: 16px; }
+  .culto-cab small { color: var(--tenue); }
+  .turno { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--borde); cursor: pointer; }
+  .turno .n { color: var(--acento); font-weight: 700; width: 20px; text-align: center; }
+  .turno .info { flex: 1; min-width: 0; }
+  .turno .tit { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .turno .sub { font-size: 14px; color: var(--tenue); }
+  .turno.mio .sub b { color: var(--ok); }
+  .culto-pie { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--borde); }
+  .culto-pie button { flex: 1; font-size: 14px; padding: 9px; }
+  .mini { padding: 4px 9px; font-size: 13px; border-radius: 8px; }
+  .seccion-t { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--tenue); margin: 18px 2px 8px; }
+  .programada { background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.35); color: var(--ok); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 14px; }
+  /* ventana emergente */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .modal .hoja { background: var(--panel); border: 1px solid var(--borde); border-radius: 16px 16px 0 0; width: 100%; max-width: 760px; max-height: 88vh; overflow-y: auto; padding: 18px 16px 24px; }
+  @media (min-width: 700px) { .modal { align-items: center; } .modal .hoja { border-radius: 16px; } }
+  .modal h3 { margin: 0 0 4px; }
+  .opcion { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--borde); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
+  .opcion.sel { border-color: var(--acento); background: rgba(242,177,52,.08); }
+  .opcion .tit { font-weight: 600; flex: 1; min-width: 0; }
+  #elegirCancionLista { max-height: 40vh; overflow-y: auto; margin-top: 8px; }
+  .equipo { padding: 8px 14px 10px; border-top: 1px solid var(--borde); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .equipo .lbl { font-size: 12px; color: var(--tenue); text-transform: uppercase; letter-spacing: .05em; width: 100%; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel2); border: 1px solid var(--borde); border-radius: 99px; padding: 4px 6px 4px 11px; font-size: 13px; }
+  .chip.mio { border-color: var(--ok); }
+  .chip b { font-weight: 600; } .chip span { color: var(--tenue); }
+  .chip button { padding: 0 6px; border: 0; background: none; font-size: 12px; color: var(--tenue); }
+  .hermano { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--panel2); border: 1px solid var(--borde); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acento2); flex: none; }
+  .hermano .info { flex: 1; min-width: 0; } .hermano .sub { font-size: 13px; color: var(--tenue); }
+  .tono-chip { cursor: pointer; }
+  .tonoT { color: var(--acento); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -49,13 +87,14 @@
 <main>
   <!-- ======= LISTA ======= -->
   <section id="pantallaLista">
-    <div class="buscador">
+    <div class="buscador" id="cajaBuscar">
       <input id="buscar" type="search" placeholder="Buscar alabanza, hermano o letra…">
     </div>
     <div class="filtros" id="filtros">
-      <button data-f="todas" class="activo">Todas</button>
-      <button data-f="culto">⭐ Culto de hoy</button>
-      <button data-f="mias">🙋 Las mías</button>
+      <button data-f="cultos" class="activo">📅 Cultos</button>
+      <button data-f="mias">🙋 Lo que me toca</button>
+      <button data-f="hermanos">👥 Hermanos</button>
+      <button data-f="todas">🎵 Todas las alabanzas</button>
     </div>
     <div id="lista"></div>
     <div style="text-align:center;margin-top:30px"><a href="#salir" class="tenue" style="font-size:13px">Cerrar sesión</a></div>
@@ -67,6 +106,8 @@
     <div class="ver-cab">
       <h2 id="verTitulo"></h2>
       <div class="tenue" id="verSub"></div>
+      <div id="verProgramada"></div>
+      <div id="verTonos" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
     </div>
     <div class="herram">
       <span class="tenue">Tono:</span>
@@ -81,7 +122,7 @@
     <div class="tarjeta vista-acordes" id="vistaLetra"></div>
     <div class="tenue" id="verNotas" style="margin-top:10px"></div>
     <div class="acciones">
-      <button id="btnCulto">⭐ Agregar al culto</button>
+      <button id="btnAlCulto">📅 Agregar a un culto</button>
       <button id="btnEditar" class="prim">✏️ Editar</button>
     </div>
   </section>
@@ -95,6 +136,10 @@
       <div style="flex:.5"><label>Tono</label><input id="fTono" placeholder="Ej: G o Sol" autocomplete="off"></div>
     </div>
     <datalist id="listaCantantes"></datalist>
+    <div id="cajaCultoEditor">
+      <label>¿Para qué culto? (opcional)</label>
+      <select id="fCulto"></select>
+    </div>
     <label>Autor (opcional)</label>
     <input id="fAutor" placeholder="Autor o ministerio" autocomplete="off">
 
@@ -129,18 +174,90 @@ Santo, santo…"></textarea>
   </section>
 </main>
 
+<!-- ======= VENTANA: agregar alabanza a un culto ======= -->
+<div class="modal oculto" id="modalTurno">
+  <div class="hoja">
+    <h3 id="mtTitulo">Agregar a un culto</h3>
+    <div class="tenue" id="mtSub" style="font-size:14px"></div>
+    <div id="mtCajaCancion">
+      <label>Alabanza</label>
+      <input id="mtBuscar" type="search" placeholder="Buscar alabanza…">
+      <div id="elegirCancionLista"></div>
+    </div>
+    <div id="mtCajaCulto">
+      <label>¿En qué culto?</label>
+      <div id="mtCultos"></div>
+    </div>
+    <div class="fila">
+      <div><label>¿Quién la canta ese día?</label><input id="mtCantante" list="listaCantantes" placeholder="Hno. / Hna." autocomplete="off"></div>
+      <div style="flex:.45"><label>Tono</label><input id="mtTono" placeholder="Ej: G" autocomplete="off"></div>
+    </div>
+    <div class="tenue" id="mtTonoAyuda" style="font-size:12px;margin-top:4px"></div>
+    <div class="acciones">
+      <button id="mtCancelar">Cancelar</button>
+      <button class="prim" id="mtGuardar">✔ Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= VENTANA: poner a un hermano en un culto ======= -->
+<div class="modal oculto" id="modalPart">
+  <div class="hoja">
+    <h3 id="mpTitulo">Agregar hermano al culto</h3>
+    <div class="tenue" id="mpSub" style="font-size:14px"></div>
+    <label>Nombre del hermano</label>
+    <input id="mpNombre" list="listaCantantes" placeholder="Hno. / Hna." autocomplete="off">
+    <label>¿Qué hace ese día?</label>
+    <input id="mpRol" list="listaRoles" placeholder="Ej: Guitarra" autocomplete="off">
+    <datalist id="listaRoles"></datalist>
+    <div id="mpRolesRapidos" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+    <div id="mpCajaCulto">
+      <label>¿En qué culto?</label>
+      <div id="mpCultos"></div>
+    </div>
+    <div class="acciones">
+      <button id="mpCancelar">Cancelar</button>
+      <button class="prim" id="mpGuardar">✔ Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= VENTANA: nuevo culto ======= -->
+<div class="modal oculto" id="modalCulto">
+  <div class="hoja">
+    <h3 id="mcTitulo">Nuevo culto</h3>
+    <label>Fecha</label>
+    <input id="mcFecha" type="date">
+    <label>Nombre</label>
+    <input id="mcNombre" list="nombresCulto" placeholder="Ej: Noche de alabanza" autocomplete="off">
+    <datalist id="nombresCulto">
+      <option value="Noche de alabanza"><option value="Culto de alabanza"><option value="Culto dominical">
+      <option value="Culto de oración"><option value="Vigilia"><option value="Culto de jóvenes">
+    </datalist>
+    <div class="acciones">
+      <button class="peligro oculto" id="mcBorrar">🗑 Borrar culto</button>
+      <button id="mcCancelar">Cancelar</button>
+      <button class="prim" id="mcGuardar">✔ Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script src="comun.js"></script>
 <script type="module">
 import './nube.js';
 
-let canciones = [], estado = { listaCulto: [] }, filtro = 'todas';
-let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista';
+let canciones = [], estado = {}, prog = { cultos: [], turnos: [] }, filtro = 'cultos', verPasados = false;
+let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista', hermanoSel = null;
 const $ = id => document.getElementById(id);
 
 function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch {} }
 function leerLocal(k) { try { return localStorage.getItem(k); } catch { return null; } }
 let miNombre = leerLocal('miNombre') || '';
+const esMio = nombre => !!miNombre && !!nombre && normalizar(nombre).includes(normalizar(miNombre));
+const inicial = n => escaparHTML(String(n).replace(/^(hn[oa]s?\.?|herman[oa]s?|pastor[a]?)\s+/i, '').charAt(0).toUpperCase() || '?');
+function actualizarNombres() { $('listaCantantes').innerHTML = nombresHermanos(canciones, prog).map(n => `<option value="${escaparHTML(n)}">`).join(''); }
+const cancionDe = id => canciones.find(c => c.id === id);
 
 function mostrar(p) {
   pantalla = p;
@@ -155,45 +272,173 @@ $('btnAtras').onclick = () => {
 };
 
 // ---------- Lista ----------
-function pintarLista() {
-  const q = normalizar($('buscar').value);
-  let l = canciones.slice();
-  if (filtro === 'culto') l = estado.listaCulto.map(id => canciones.find(c => c.id === id)).filter(Boolean);
-  else l.sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-  if (filtro === 'mias') l = l.filter(c => miNombre && normalizar(c.cantante).includes(normalizar(miNombre)));
-  if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante + ' ' + c.autor + ' ' + c.letra).includes(q));
-  const cont = $('lista');
-  if (!l.length) {
-    cont.innerHTML = `<div class="vacio">${filtro === 'mias' && !miNombre ? 'Guarda una alabanza con tu nombre en “Quién la canta” para verlas aquí.' : filtro === 'culto' ? 'Todavía no hay alabanzas en el culto de hoy.' : 'No hay alabanzas todavía.<br>Toca “＋ Nueva alabanza”.'}</div>`;
-    return;
-  }
-  cont.innerHTML = l.map(c => `
-    <div class="tarjeta cancion" data-id="${c.id}">
+function filaCancion(c) {
+  const enCultos = prog.turnos.filter(t => t.cancionId === c.id).length;
+  return `<div class="tarjeta cancion" data-id="${c.id}">
       <div class="tono">${escaparHTML(c.tono || '·')}</div>
       <div class="info">
         <div class="tit">${escaparHTML(c.titulo)}</div>
         <div class="sub">${c.cantante ? '🎤 ' + escaparHTML(c.cantante) : '<span class="tenue">Sin cantante</span>'}
-          ${estado.listaCulto.includes(c.id) ? ' · <span class="encult">⭐ Culto</span>' : ''}</div>
+          ${enCultos ? ' · <span class="encult">📅 ' + enCultos + ' culto' + (enCultos > 1 ? 's' : '') + '</span>' : ''}</div>
       </div>
       <span class="tenue">›</span>
-    </div>`).join('');
-  cont.querySelectorAll('.cancion').forEach(el => el.onclick = () => abrir(el.dataset.id));
+    </div>`;
+}
+function tarjetaCulto(cu, soloMios) {
+  let ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
+  if (soloMios) ts = ts.filter(t => esMio(t.cantante));
+  const esHoy = cu.fecha === hoyISO();
+  return `<div class="tarjeta culto ${esHoy ? 'hoy' : ''}">
+    <div class="culto-cab">
+      <div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)} · ${turnosDe(prog, cu.id).length} alabanza(s)</small></div>
+      ${soloMios ? '' : `<button class="mini" data-editar-culto="${cu.id}" title="Cambiar fecha o nombre">✏️</button>`}
+    </div>
+    ${ts.length ? ts.map((t, i) => {
+      const c = cancionDe(t.cancionId);
+      const tono = tonoTurno(t, c);
+      return `<div class="turno ${esMio(t.cantante) ? 'mio' : ''}" data-id="${c.id}">
+        <span class="n">${soloMios ? '•' : i + 1}</span>
+        <div class="info"><div class="tit">${escaparHTML(c.titulo)}</div>
+          <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${tono ? ' · <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}${t.tono && c.tono && t.tono !== c.tono ? ' <span class="tenue">(original ' + escaparHTML(c.tono) + ')</span>' : ''}</div></div>
+        ${soloMios ? '' : `<button class="mini" data-editar-turno="${t.id}" title="Cambiar quién canta o el tono">✏️</button><button class="mini" data-quitar-turno="${t.id}" title="Quitar de este culto">✖</button>`}
+      </div>`;
+    }).join('') : `<div class="turno tenue" style="cursor:default">Todavía no hay alabanzas en este culto.</div>`}
+    ${equipoHTML(cu, soloMios)}
+    ${soloMios ? '' : `<div class="culto-pie"><button data-agregar-a="${cu.id}">＋ Alabanza</button><button data-agregar-hermano="${cu.id}">＋ Hermano</button></div>`}
+  </div>`;
+}
+// quién sirve en el culto: los que tocan/dirigen y los que cantan alguna alabanza
+function equipoHTML(cu, soloMios) {
+  let ps = participacionesDe(prog, cu.id).slice().sort((a, b) => ROLES.indexOf(a.rol) - ROLES.indexOf(b.rol));
+  if (soloMios) ps = ps.filter(x => esMio(x.nombre));
+  const cantan = nombresHermanos([], { turnos: turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId)) })
+    .filter(n => !ps.some(x => mismoNombre(x.nombre, n) && /canta|dirige|coros/i.test(x.rol)));
+  if (!ps.length && (soloMios || !cantan.length)) return '';
+  return `<div class="equipo"><span class="lbl">👥 Equipo de este culto</span>
+    ${ps.map(x => `<span class="chip ${esMio(x.nombre) ? 'mio' : ''}"><b data-hermano="${escaparHTML(x.nombre)}">${escaparHTML(x.nombre)}</b><span>${escaparHTML(x.rol || '')}</span>${soloMios ? '' : `<button data-quitar-part="${x.id}" title="Quitar">✖</button>`}</span>`).join('')}
+    ${soloMios ? '' : cantan.map(n => `<span class="chip ${esMio(n) ? 'mio' : ''}" style="padding-right:11px"><b data-hermano="${escaparHTML(n)}">${escaparHTML(n)}</b><span>Canta</span></span>`).join('')}
+  </div>`;
+}
+function pintarHermanos(cont) {
+  const nombres = nombresHermanos(canciones, prog);
+  const hoy = hoyISO();
+  const diasDe = n => prog.cultos.filter(cu => cu.fecha >= hoy && (participacionesDe(prog, cu.id).some(x => mismoNombre(x.nombre, n)) || turnosDe(prog, cu.id).some(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId))))
+    .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  if (hermanoSel) {
+    const n = hermanoSel, dias = diasDe(n);
+    const suyas = canciones.filter(c => mismoNombre(c.cantante, n) || prog.turnos.some(t => t.cancionId === c.id && mismoNombre(t.cantante, n)))
+      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+    cont.innerHTML = `<button class="chico" id="volverHermanos" style="margin-bottom:10px">‹ Todos los hermanos</button>
+      <div class="tarjeta hermano" style="cursor:default"><div class="avatar">${inicial(n)}</div><div class="info"><b style="font-size:18px">${escaparHTML(n)}</b>
+        <div class="sub">${dias.length} día(s) próximos · ${suyas.length} alabanza(s)</div></div></div>
+      <div class="acciones" style="margin-top:0"><button class="prim" id="ponerEnCulto">📅 Poner en un culto</button></div>
+      <div class="seccion-t">📅 Próximos días que sirve</div>
+      ${dias.map(cu => {
+        const roles = participacionesDe(prog, cu.id).filter(x => mismoNombre(x.nombre, n));
+        const ts = turnosDe(prog, cu.id).filter(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId));
+        return `<div class="tarjeta culto"><div class="culto-cab"><div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)}</small></div></div>
+          ${roles.length ? `<div class="equipo">${roles.map(x => `<span class="chip"><b>${escaparHTML(x.rol || 'Participa')}</b><button data-quitar-part="${x.id}" title="Quitar">✖</button></span>`).join('')}</div>` : ''}
+          ${ts.map(t => { const c = cancionDe(t.cancionId), tono = tonoTurno(t, c); return `<div class="turno" data-id="${c.id}"><span class="n">🎤</span><div class="info"><div class="tit">${escaparHTML(c.titulo)}</div><div class="sub">${tono ? 'Tono <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}</div></div></div>`; }).join('')}
+        </div>`;
+      }).join('') || '<div class="tarjeta tenue">No tiene días programados.</div>'}
+      <div class="seccion-t">🎵 Alabanzas que canta</div>
+      ${suyas.map(c => {
+        const ultimo = prog.turnos.filter(t => t.cancionId === c.id && mismoNombre(t.cantante, n) && t.tono).sort((a, b) => String(b.actualizada).localeCompare(String(a.actualizada)))[0];
+        const tono = (ultimo && ultimo.tono) || (mismoNombre(c.cantante, n) ? c.tono : '');
+        return `<div class="tarjeta cancion" data-id="${c.id}"><div class="tono">${escaparHTML(tono || '·')}</div><div class="info"><div class="tit">${escaparHTML(c.titulo)}</div><div class="sub">${tono && c.tono && tono !== c.tono ? 'Su tono ' + escaparHTML(tono) + ' · original ' + escaparHTML(c.tono) : 'Tono ' + escaparHTML(tono || c.tono || '—')}</div></div><span class="tenue">›</span></div>`;
+      }).join('') || '<div class="tenue">Todavía no tiene alabanzas.</div>'}`;
+    $('volverHermanos').onclick = () => { hermanoSel = null; pintarLista(); };
+    $('ponerEnCulto').onclick = () => abrirModalPart({ nombre: n });
+    return;
+  }
+  const q = normalizar($('buscar').value);
+  const l = q ? nombres.filter(n => normalizar(n).includes(q)) : nombres;
+  cont.innerHTML = (l.length ? l.map(n => {
+    const d = diasDe(n), prox = d[0];
+    const roles = [...new Set(prog.participaciones.filter(x => mismoNombre(x.nombre, n)).map(x => x.rol).filter(Boolean))];
+    return `<div class="tarjeta hermano" data-hermano="${escaparHTML(n)}"><div class="avatar">${inicial(n)}</div>
+      <div class="info"><b>${escaparHTML(n)}</b><div class="sub">${roles.length ? escaparHTML(roles.join(', ')) + ' · ' : ''}${prox ? '📅 ' + escaparHTML(fechaBonita(prox.fecha, true)) + (d.length > 1 ? ' y ' + (d.length - 1) + ' más' : '') : 'Sin días próximos'}</div></div><span class="tenue">›</span></div>`;
+  }).join('') : '<div class="vacio">' + (q ? 'No hay nadie con ese nombre.' : 'Todavía no hay hermanos. Aparecen al poner quién canta una alabanza o al agregarlos a un culto.') + '</div>')
+    + `<div class="acciones"><button id="nuevoHermano">＋ Poner a un hermano en un culto</button></div>`;
+  $('nuevoHermano').onclick = () => abrirModalPart({ nombre: $('buscar').value.trim() });
+}
+
+function pintarLista() {
+  const q = normalizar($('buscar').value);
+  const cont = $('lista');
+  $('cajaBuscar').classList.toggle('oculto', !(filtro === 'todas' || (filtro === 'hermanos' && !hermanoSel)));
+  $('buscar').placeholder = filtro === 'hermanos' ? 'Buscar hermano por nombre…' : 'Buscar alabanza, hermano o letra…';
+  actualizarNombres();
+  if (filtro === 'hermanos') return pintarHermanos(cont);
+  if (filtro === 'cultos') {
+    const o = cultosOrdenados(prog);
+    let h = o.proximos.length ? o.proximos.map(c => tarjetaCulto(c)).join('') : '<div class="vacio">No hay cultos programados.<br>Toca “＋ Nuevo culto” para crear uno.</div>';
+    h += `<div class="acciones" style="margin-top:4px"><button id="btnNuevoCulto">＋ Nuevo culto</button></div>`;
+    if (o.pasados.length) {
+      h += `<div class="seccion-t" style="cursor:pointer" id="togglePasados">${verPasados ? '▾' : '▸'} Cultos anteriores (${o.pasados.length})</div>`;
+      if (verPasados) h += o.pasados.map(c => tarjetaCulto(c)).join('');
+    }
+    cont.innerHTML = h;
+    $('btnNuevoCulto').onclick = () => abrirModalCulto(null);
+    if ($('togglePasados')) $('togglePasados').onclick = () => { verPasados = !verPasados; pintarLista(); };
+  } else if (filtro === 'mias') {
+    if (!miNombre) { cont.innerHTML = `<div class="vacio">Escribe tu nombre para ver qué días te toca cantar.<br><br><button class="prim" id="ponerNombre">🙋 Escribir mi nombre</button></div>`; $('ponerNombre').onclick = pedirNombre; return; }
+    const o = cultosOrdenados(prog);
+    const conMios = o.proximos.filter(cu => turnosDe(prog, cu.id).some(t => esMio(t.cantante) && cancionDe(t.cancionId)) || participacionesDe(prog, cu.id).some(x => esMio(x.nombre)));
+    const mias = canciones.filter(c => esMio(c.cantante)).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+    cont.innerHTML = `<div class="tenue" style="margin-bottom:10px">Hola <b>${escaparHTML(miNombre)}</b> · <a href="#" id="cambiarNombre">no soy yo</a></div>
+      <div class="seccion-t">📅 Días que me toca servir</div>
+      ${conMios.length ? conMios.map(c => tarjetaCulto(c, true)).join('') : '<div class="tarjeta tenue" style="margin-bottom:10px">No estás en los próximos cultos.</div>'}
+      <div class="seccion-t">🎵 Mis alabanzas (${mias.length})</div>
+      ${mias.map(filaCancion).join('') || '<div class="tenue">Todavía no has subido alabanzas.</div>'}`;
+    $('cambiarNombre').onclick = e => { e.preventDefault(); pedirNombre(); };
+  } else {
+    let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+    if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante + ' ' + c.autor + ' ' + c.letra).includes(q));
+    cont.innerHTML = l.length ? l.map(filaCancion).join('') : '<div class="vacio">No hay alabanzas todavía.<br>Toca “＋ Nueva alabanza”.</div>';
+  }
+}
+$('lista').onclick = async e => {
+  const b = e.target.closest('button');
+  if (b && b.dataset.agregarA) return abrirModalTurno({ cultoId: b.dataset.agregarA });
+  if (b && b.dataset.editarCulto) return abrirModalCulto(prog.cultos.find(c => c.id === b.dataset.editarCulto));
+  if (b && b.dataset.agregarHermano) return abrirModalPart({ cultoId: b.dataset.agregarHermano });
+  if (b && b.dataset.editarTurno) { const t = prog.turnos.find(x => x.id === b.dataset.editarTurno); return t && abrirModalTurno({ turno: t }); }
+  if (b && b.dataset.quitarPart) {
+    const x = prog.participaciones.find(y => y.id === b.dataset.quitarPart);
+    if (x && confirm(`¿Quitar a ${x.nombre} (${x.rol || 'participa'}) de este culto?`)) {
+      try { await API.borrarParticipacion(x.id); prog = await API.programa(); pintarLista(); aviso('Quitado del culto'); } catch (e2) { aviso(e2.message, true); }
+    }
+    return;
+  }
+  const h = e.target.closest('[data-hermano]');
+  if (h) { filtro = 'hermanos'; hermanoSel = h.dataset.hermano; $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x.dataset.f === 'hermanos')); window.scrollTo(0, 0); return pintarLista(); }
+  if (b && b.dataset.quitarTurno) {
+    const t = prog.turnos.find(x => x.id === b.dataset.quitarTurno), c = t && cancionDe(t.cancionId);
+    if (t && confirm(`¿Quitar “${c ? c.titulo : ''}” de este culto?\n(La alabanza no se borra)`)) {
+      try { await API.borrarTurno(t.id); prog = await API.programa(); pintarLista(); aviso('Quitada del culto'); } catch (x) { aviso(x.message, true); }
+    }
+    return;
+  }
+  const el = e.target.closest('[data-id]');
+  if (el && !el.classList.contains('tenue')) abrir(el.dataset.id);
+};
+function pedirNombre() {
+  const n = prompt('¿Cuál es tu nombre? (como aparece en “Quién la canta”, ej: Hna. Ana)', miNombre);
+  if (n !== null) { miNombre = n.trim(); guardarLocal('miNombre', miNombre); }
+  pintarLista();
 }
 $('buscar').oninput = pintarLista;
 $('filtros').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
-  filtro = b.dataset.f;
-  if (filtro === 'mias' && !miNombre) {
-    const n = prompt('¿Cuál es tu nombre? (como lo escribes en “Quién la canta”)');
-    if (n) { miNombre = n.trim(); guardarLocal('miNombre', miNombre); }
-  }
+  filtro = b.dataset.f; hermanoSel = null; $('buscar').value = '';
   $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x === b));
   pintarLista();
 };
 
 // ---------- Ver ----------
 function abrir(id) {
-  actual = canciones.find(c => c.id === id);
+  actual = cancionDe(id);
   if (!actual) { mostrar('lista'); return pintarLista(); }
   pasos = 0; latino = undefined;
   pintarVer(); mostrar('ver');
@@ -202,28 +447,163 @@ function pintarVer() {
   const c = actual;
   $('verTitulo').textContent = c.titulo;
   $('verSub').textContent = [c.cantante && '🎤 ' + c.cantante, c.autor].filter(Boolean).join(' · ');
+  const hoy = hoyISO();
+  const prox = prog.turnos.filter(t => t.cancionId === c.id).map(t => ({ t, cu: prog.cultos.find(x => x.id === t.cultoId) }))
+    .filter(x => x.cu && x.cu.fecha >= hoy).sort((a, b) => a.cu.fecha.localeCompare(b.cu.fecha));
+  $('verProgramada').innerHTML = prox.map(x => `<div class="programada">📅 ${escaparHTML(fechaBonita(x.cu.fecha))} · ${escaparHTML(x.cu.nombre)}${x.t.cantante ? ' — 🎤 ' + escaparHTML(x.t.cantante) : ''}</div>`).join('');
+  // en qué tono la canta cada hermano (tocar uno = ver los acordes en ese tono)
+  const tonos = new Map();
+  if (c.tono) tonos.set('Original', c.tono);
+  prog.turnos.filter(t => t.cancionId === c.id && t.cantante).sort((a, b) => String(a.actualizada).localeCompare(String(b.actualizada)))
+    .forEach(t => tonos.set(t.cantante, tonoTurno(t, c)));
+  $('verTonos').innerHTML = tonos.size > 1 ? [...tonos].map(([n, t]) => `<span class="chip tono-chip" data-tono="${escaparHTML(t)}" style="padding-right:11px"><span>${escaparHTML(n)}</span><b class="tonoT">${escaparHTML(t)}</b></span>`).join('') : '';
   $('tonoActual').textContent = c.tono ? transponerAcorde(c.tono, pasos, latino) : (pasos > 0 ? '+' : '') + pasos;
   const secs = analizarLetra(c.letra);
   $('vistaLetra').innerHTML = secs.length ? secs.map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latino)}</div>`).join('') : '<span class="tenue">Sin letra</span>';
   $('vistaLetra').style.fontSize = tamLetra + 'px';
   $('verNotas').textContent = c.notas ? '📝 ' + c.notas : '';
-  const enCulto = estado.listaCulto.includes(c.id);
-  $('btnCulto').textContent = enCulto ? '✖ Quitar del culto' : '⭐ Agregar al culto';
 }
+$('verTonos').onclick = e => { const ch = e.target.closest('[data-tono]'); if (!ch || !actual) return; const d = semitonos(actual.tono, ch.dataset.tono); if (d === null) return aviso('No se entiende ese tono', true); pasos = d; pintarVer(); };
 $('subir').onclick = () => { pasos++; pintarVer(); };
 $('bajar').onclick = () => { pasos--; pintarVer(); };
 $('notacion').onclick = () => { latino = latino === undefined ? true : latino ? false : undefined; $('notacion').textContent = latino === undefined ? 'Do/C' : latino ? 'Do' : 'C'; pintarVer(); };
 $('letraMas').onclick = () => { tamLetra = Math.min(30, tamLetra + 2); pintarVer(); };
 $('letraMenos').onclick = () => { tamLetra = Math.max(11, tamLetra - 2); pintarVer(); };
-$('btnCulto').onclick = async () => {
-  const lista = estado.listaCulto.slice();
-  const i = lista.indexOf(actual.id);
-  if (i >= 0) lista.splice(i, 1); else lista.push(actual.id);
-  estado = await API.cambiarEstado({ listaCulto: lista });
-  aviso(i >= 0 ? 'Quitada del culto' : 'Agregada al culto de hoy ⭐');
-  pintarVer();
-};
+$('btnAlCulto').onclick = () => abrirModalTurno({ cancionId: actual.id });
 $('btnEditar').onclick = () => editar(actual);
+
+// ---------- Ventana: agregar alabanza a un culto ----------
+let mt = {};
+function abrirModalTurno(o) {
+  const o2 = cultosOrdenados(prog);
+  if (o.turno) o = { cultoId: o.turno.cultoId, cancionId: o.turno.cancionId, turno: o.turno };
+  if (!o2.proximos.length && !o.cultoId) {
+    if (confirm('No hay cultos programados. ¿Crear uno ahora?')) abrirModalCulto(null, () => abrirModalTurno(o));
+    return;
+  }
+  mt = { cultoId: o.cultoId || (o2.proximos[0] && o2.proximos[0].id), cancionId: o.cancionId || null, turno: o.turno || null, tonoManual: !!(o.turno && o.turno.tono) };
+  $('mtCajaCancion').classList.toggle('oculto', !!o.cancionId);
+  $('mtCajaCulto').classList.toggle('oculto', !!o.cultoId);
+  const cu = prog.cultos.find(x => x.id === o.cultoId);
+  const c = cancionDe(o.cancionId);
+  $('mtTitulo').textContent = o.turno ? 'Cambiar quién canta o el tono' : o.cultoId ? 'Agregar alabanza' : 'Agregar a un culto';
+  $('mtSub').textContent = o.turno ? `${c ? c.titulo : ''} · ${nombreCulto(cu)}` : cu ? nombreCulto(cu) : c ? c.titulo : '';
+  $('mtCajaCancion').classList.toggle('oculto', !!o.cancionId);
+  $('mtCantante').value = o.turno ? (o.turno.cantante || '') : (c && c.cantante) || miNombre || '';
+  $('mtTono').value = o.turno ? tonoTurno(o.turno, c) : '';
+  $('mtGuardar').textContent = o.turno ? '✔ Guardar' : '✔ Agregar';
+  if (!o.turno) sugerirTono();
+  $('mtBuscar').value = '';
+  pintarModalTurno();
+  $('modalTurno').classList.remove('oculto');
+}
+// el tono se propone solo: el que ese hermano usó antes con esa alabanza, o el original
+function sugerirTono() {
+  const c = cancionDe(mt.cancionId);
+  if (!c) { $('mtTonoAyuda').textContent = ''; return; }
+  if (!mt.tonoManual) $('mtTono').value = tonoSugerido(prog, c, $('mtCantante').value);
+  const t = $('mtTono').value.trim(), d = semitonos(c.tono, t);
+  $('mtTonoAyuda').textContent = c.tono ? (t && t !== c.tono ? `Original: ${c.tono}. Los músicos verán los acordes ya cambiados a ${t}${d !== null ? ' (' + (d > 0 ? '+' : '') + d + ' semitonos)' : ''}.` : `Tono original: ${c.tono}. Si este hermano la canta en otro tono, cámbialo aquí.`) : 'Escribe el tono en que la canta (ej: G, A, Sol, La).';
+}
+$('mtCantante').oninput = sugerirTono;
+$('mtTono').oninput = () => { mt.tonoManual = true; sugerirTono(); };
+
+function pintarModalTurno() {
+  const q = normalizar($('mtBuscar').value);
+  let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante).includes(q));
+  $('elegirCancionLista').innerHTML = l.map(c => `<div class="opcion ${c.id === mt.cancionId ? 'sel' : ''}" data-c="${c.id}"><span class="tit">${escaparHTML(c.titulo)}</span><span class="tenue" style="font-size:13px">${escaparHTML(c.cantante || '')}</span></div>`).join('') || '<div class="tenue">No hay alabanzas.</div>';
+  $('mtCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mt.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
+}
+$('mtBuscar').oninput = pintarModalTurno;
+$('elegirCancionLista').onclick = e => { const o = e.target.closest('[data-c]'); if (!o) return; mt.cancionId = o.dataset.c; const c = cancionDe(mt.cancionId); if (c && c.cantante && !$('mtCantante').value) $('mtCantante').value = c.cantante; sugerirTono(); pintarModalTurno(); };
+$('mtCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (!o) return; mt.cultoId = o.dataset.cu; pintarModalTurno(); };
+$('mtCancelar').onclick = () => $('modalTurno').classList.add('oculto');
+$('modalTurno').onclick = e => { if (e.target.id === 'modalTurno') $('modalTurno').classList.add('oculto'); };
+$('mtGuardar').onclick = async () => {
+  if (!mt.cancionId) return aviso('Elige la alabanza', true);
+  if (!mt.cultoId) return aviso('Elige el culto', true);
+  const cantante = $('mtCantante').value.trim(), tono = $('mtTono').value.trim();
+  // la misma alabanza puede ir 2 veces en un culto si la cantan hermanos distintos
+  const ya = mt.turno || prog.turnos.find(t => t.cultoId === mt.cultoId && t.cancionId === mt.cancionId && mismoNombre(t.cantante, cantante));
+  try {
+    await API.guardarTurno(ya ? { ...ya, cantante, tono } : { cultoId: mt.cultoId, cancionId: mt.cancionId, cantante, tono });
+    if (cantante && !miNombre) { miNombre = cantante; guardarLocal('miNombre', miNombre); }
+    prog = await API.programa();
+    $('modalTurno').classList.add('oculto');
+    aviso(ya ? 'Actualizado ✔' : 'Agregada al culto ✔');
+    if (pantalla === 'ver') pintarVer(); else pintarLista();
+  } catch (x) { aviso(x.message, true); }
+};
+
+// ---------- Ventana: poner a un hermano en un culto ----------
+let mp = {};
+function abrirModalPart(o) {
+  const prox = cultosOrdenados(prog).proximos;
+  if (!prox.length && !o.cultoId) { if (confirm('No hay cultos programados. ¿Crear uno ahora?')) abrirModalCulto(null, () => abrirModalPart(o)); return; }
+  mp = { cultoId: o.cultoId || prox[0].id, fijo: !!o.cultoId };
+  actualizarNombres();
+  $('mpNombre').value = o.nombre || '';
+  $('mpRol').value = '';
+  $('listaRoles').innerHTML = ROLES.map(r => `<option value="${escaparHTML(r)}">`).join('');
+  $('mpRolesRapidos').innerHTML = ROLES.slice(0, 9).map(r => `<button class="mini" data-rol="${escaparHTML(r)}">${escaparHTML(r)}</button>`).join('');
+  $('mpCajaCulto').classList.toggle('oculto', mp.fijo);
+  const cu = prog.cultos.find(x => x.id === o.cultoId);
+  $('mpSub').textContent = cu ? nombreCulto(cu) : '';
+  $('mpTitulo').textContent = o.nombre ? `Poner a ${o.nombre} en un culto` : 'Agregar hermano al culto';
+  pintarModalPart();
+  $('modalPart').classList.remove('oculto');
+  if (!o.nombre) setTimeout(() => $('mpNombre').focus(), 50);
+}
+function pintarModalPart() {
+  $('mpCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mp.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
+}
+$('mpRolesRapidos').onclick = e => { const b = e.target.closest('[data-rol]'); if (b) $('mpRol').value = b.dataset.rol; };
+$('mpCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (o) { mp.cultoId = o.dataset.cu; pintarModalPart(); } };
+$('mpCancelar').onclick = () => $('modalPart').classList.add('oculto');
+$('modalPart').onclick = e => { if (e.target.id === 'modalPart') $('modalPart').classList.add('oculto'); };
+$('mpGuardar').onclick = async () => {
+  const nombre = $('mpNombre').value.trim(), rol = $('mpRol').value.trim();
+  if (!nombre) return aviso('Escribe el nombre del hermano', true);
+  if (!rol) return aviso('Elige qué hace ese día', true);
+  const ya = prog.participaciones.find(x => x.cultoId === mp.cultoId && mismoNombre(x.nombre, nombre) && normalizar(x.rol) === normalizar(rol));
+  if (ya) return aviso('Ya está en ese culto con esa función');
+  try {
+    await API.guardarParticipacion({ cultoId: mp.cultoId, nombre, rol });
+    prog = await API.programa();
+    $('modalPart').classList.add('oculto');
+    aviso(`${nombre} agregado ✔`); pintarLista();
+  } catch (x) { aviso(x.message, true); }
+};
+
+// ---------- Ventana: nuevo culto ----------
+let mcEditando = null, mcDespues = null;
+function abrirModalCulto(cu, despues) {
+  mcEditando = cu; mcDespues = despues || null;
+  $('mcTitulo').textContent = cu ? 'Cambiar culto' : 'Nuevo culto';
+  $('mcFecha').value = cu ? cu.fecha : hoyISO();
+  $('mcNombre').value = cu ? cu.nombre : 'Culto de alabanza';
+  $('mcBorrar').classList.toggle('oculto', !cu);
+  $('modalCulto').classList.remove('oculto');
+}
+$('mcCancelar').onclick = () => $('modalCulto').classList.add('oculto');
+$('modalCulto').onclick = e => { if (e.target.id === 'modalCulto') $('modalCulto').classList.add('oculto'); };
+$('mcGuardar').onclick = async () => {
+  if (!$('mcFecha').value) return aviso('Elige la fecha', true);
+  try {
+    await API.guardarCulto({ id: mcEditando && mcEditando.id, fecha: $('mcFecha').value, nombre: $('mcNombre').value });
+    prog = await API.programa();
+    $('modalCulto').classList.add('oculto');
+    aviso('Culto guardado ✔');
+    pintarLista();
+    if (mcDespues) mcDespues();
+  } catch (x) { aviso(x.message, true); }
+};
+$('mcBorrar').onclick = async () => {
+  if (!mcEditando || !confirm(`¿Borrar el culto “${nombreCulto(mcEditando)}”?\n(Las alabanzas no se borran)`)) return;
+  await API.borrarCulto(mcEditando.id); prog = await API.programa();
+  $('modalCulto').classList.add('oculto'); aviso('Culto borrado'); pintarLista();
+};
 
 // ---------- Editor ----------
 function editar(c) {
@@ -235,8 +615,11 @@ function editar(c) {
   $('fNotas').value = c ? c.notas : '';
   $('textoLetra').value = c ? c.letra : '';
   $('btnBorrar').classList.toggle('oculto', !c);
-  const nombres = [...new Set(canciones.map(x => x.cantante).filter(Boolean))].sort();
+  const nombres = [...new Set(canciones.map(x => x.cantante).concat(prog.turnos.map(t => t.cantante)).filter(Boolean))].sort();
   $('listaCantantes').innerHTML = nombres.map(n => `<option value="${escaparHTML(n)}">`).join('');
+  const prox = cultosOrdenados(prog).proximos;
+  $('cajaCultoEditor').classList.toggle('oculto', !!c || !prox.length);
+  $('fCulto').innerHTML = '<option value="">— Ninguno por ahora —</option>' + prox.map(cu => `<option value="${cu.id}">${escaparHTML(nombreCulto(cu))}</option>`).join('');
   pintarPrevia();
   mostrar('editor');
 }
@@ -254,11 +637,13 @@ $('btnGuardar').onclick = async () => {
     autor: $('fAutor').value, notas: $('fNotas').value, letra: $('textoLetra').value
   };
   if (!datos.titulo.trim()) { aviso('Escribe el nombre de la alabanza', true); return $('fTitulo').focus(); }
+  const cultoId = !actual && $('fCulto').value;
   $('btnGuardar').disabled = true;
   try {
     const g = await API.guardarCancion(datos);
     if (datos.cantante.trim() && !miNombre) { miNombre = datos.cantante.trim(); guardarLocal('miNombre', miNombre); }
     canciones = await API.canciones();
+    if (cultoId) { await API.guardarTurno({ cultoId, cancionId: g.id, cantante: datos.cantante.trim() }); prog = await API.programa(); }
     aviso('Guardada ✔ Se copiará sola a la PC de la iglesia');
     abrir(g.id);
   } catch (e) { aviso('No se pudo guardar: ' + e.message, true); }
@@ -272,18 +657,20 @@ $('btnBorrar').onclick = async () => {
 };
 
 // ---------- Inicio y tiempo real ----------
+function repintar() {
+  if (!$('modalTurno').classList.contains('oculto')) pintarModalTurno();
+  if (pantalla === 'lista') pintarLista();
+  if (pantalla === 'ver' && actual) { actual = cancionDe(actual.id) || actual; pintarVer(); }
+}
 async function cargar() {
-  try { [canciones, estado] = await Promise.all([API.canciones(), API.estado()]); } catch {}
+  try { [canciones, estado, prog] = await Promise.all([API.canciones(), API.estado(), API.programa()]); } catch {}
   pintarLista();
 }
 escucharEventos({
   conexion: ok => $('conexion').classList.toggle('on', ok),
-  estado: e => { estado = e; if (pantalla === 'lista') pintarLista(); if (pantalla === 'ver') pintarVer(); },
-  canciones: async () => {
-    canciones = await API.canciones();
-    if (pantalla === 'lista') pintarLista();
-    if (pantalla === 'ver' && actual) { actual = canciones.find(c => c.id === actual.id) || actual; pintarVer(); }
-  }
+  estado: e => { estado = e; },
+  canciones: async () => { canciones = await API.canciones(); repintar(); },
+  programa: async () => { prog = await API.programa(); repintar(); }
 });
 cargar();
 </script>

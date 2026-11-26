@@ -20,8 +20,68 @@ var API = {
   cambiarEstado(c) { return this.post('/api/estado', c); },
   guardarCancion(c) { return this.post('/api/canciones', c); },
   borrarCancion(id) { return this.borrar('/api/canciones/' + id); },
-  fondos() { return this.get('/api/fondos'); }
+  fondos() { return this.get('/api/fondos'); },
+  programa() { return this.get('/api/programa'); },
+  guardarCulto(c) { return this.post('/api/cultos', c); },
+  borrarCulto(id) { return this.borrar('/api/cultos/' + id); },
+  guardarTurno(t) { return this.post('/api/turnos', t); },
+  borrarTurno(id) { return this.borrar('/api/turnos/' + id); },
+  guardarParticipacion(x) { return this.post('/api/participaciones', x); },
+  borrarParticipacion(id) { return this.borrar('/api/participaciones/' + id); }
 };
+
+// ---------- Hermanos y funciones ----------
+const ROLES = ['Dirige la alabanza', 'Canta', 'Coros', 'Guitarra', 'Guitarra eléctrica', 'Bajo', 'Piano / Teclado', 'Batería', 'Percusión', 'Violín', 'Sonido', 'Pantalla LED'];
+// todos los nombres que aparecen en la app, sin repetir (sin importar mayúsculas o tildes)
+function nombresHermanos(canciones, prog) {
+  const m = new Map();
+  const add = n => { n = String(n || '').trim(); if (n && !m.has(normalizar(n))) m.set(normalizar(n), n); };
+  (canciones || []).forEach(c => add(c.cantante));
+  ((prog && prog.turnos) || []).forEach(t => add(t.cantante));
+  ((prog && prog.participaciones) || []).forEach(x => add(x.nombre));
+  return [...m.values()].sort((a, b) => a.localeCompare(b, 'es'));
+}
+const mismoNombre = (a, b) => !!a && !!b && normalizar(a).trim() === normalizar(b).trim();
+function participacionesDe(prog, cultoId) { return ((prog && prog.participaciones) || []).filter(x => x.cultoId === cultoId); }
+
+// ---------- Tonos ----------
+// semitonos para pasar del tono "de" al tono "a" (ej. G → A = +2). null si no se entiende.
+function semitonos(de, a) {
+  const m1 = RE_ACORDE.exec(String(de || '').trim()), m2 = RE_ACORDE.exec(String(a || '').trim());
+  if (!m1 || !m2) return null;
+  const v1 = VALOR_NOTA[m1[1] + m1[2]], v2 = VALOR_NOTA[m2[1] + m2[2]];
+  if (v1 === undefined || v2 === undefined) return null;
+  let d = ((v2 - v1) % 12 + 12) % 12; if (d > 6) d -= 12;
+  return d;
+}
+// el tono que tiene que usar este turno; si no tiene, el último tono que ese hermano usó con esa alabanza, o el original
+function tonoSugerido(prog, cancion, cantante) {
+  const previos = ((prog && prog.turnos) || []).filter(t => t.cancionId === cancion.id && t.tono && mismoNombre(t.cantante, cantante))
+    .sort((a, b) => String(b.actualizada).localeCompare(String(a.actualizada)));
+  return previos.length ? previos[0].tono : (cancion.tono || '');
+}
+const tonoTurno = (t, c) => (t && t.tono) || (c && c.tono) || '';
+
+// ---------- Cultos por fecha ----------
+function hoyISO() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fechaBonita(f, corta) {
+  if (!f) return '';
+  const d = new Date(f + 'T12:00:00');
+  let t = d.toLocaleDateString('es', corta ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' });
+  t = t.charAt(0).toUpperCase() + t.slice(1);
+  const hoy = hoyISO();
+  const man = new Date(Date.now() + 864e5); const manISO = man.getFullYear() + '-' + String(man.getMonth() + 1).padStart(2, '0') + '-' + String(man.getDate()).padStart(2, '0');
+  return f === hoy ? 'Hoy · ' + t : f === manISO ? 'Mañana · ' + t : t;
+}
+const nombreCulto = c => c ? `${fechaBonita(c.fecha)} — ${c.nombre}` : '';
+// próximos (desde hoy) ordenados; los pasados al final, del más reciente al más antiguo
+function cultosOrdenados(prog) {
+  const hoy = hoyISO(), l = (prog && prog.cultos) || [];
+  return { proximos: l.filter(c => c.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha)), pasados: l.filter(c => c.fecha < hoy).sort((a, b) => b.fecha.localeCompare(a.fecha)) };
+}
+// el culto de hoy; si no hay, el próximo; si no, el último que hubo
+function cultoDeHoy(prog) { const o = cultosOrdenados(prog); return o.proximos[0] || o.pasados[0] || null; }
+function turnosDe(prog, cultoId) { return ((prog && prog.turnos) || []).filter(t => t.cultoId === cultoId).sort((a, b) => a.orden - b.orden); }
 
 // Conexión en vivo con reconexión automática
 function escucharEventos(manejadores) {
