@@ -6,7 +6,7 @@
 //  IMPORTANTE: cada vez que cambies algún archivo de la app,
 //  sube el número de VERSION para que los teléfonos se actualicen.
 // =============================================================
-const VERSION = 'alabanzas-v1';
+const VERSION = 'alabanzas-v2';
 
 const ARCHIVOS = [
   './',

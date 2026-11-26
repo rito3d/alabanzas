@@ -86,6 +86,35 @@
   .tipos { display: flex; gap: 8px; margin-top: 6px; }
   .tipos button { flex: 1; padding: 11px; }
   .tipos button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
+  /* ======= HOY ======= */
+  .modo-hoy { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .modo-hoy button { padding: 10px 8px; line-height: 1.25; white-space: normal; }
+  .modo-hoy button small { display: block; font-weight: 400; font-size: 12px; opacity: .8; }
+  .modo-hoy button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
+  .hoy-herr { margin: 0 0 12px; }
+  .hoy-cab { padding: 12px 14px; margin-bottom: 10px; border-color: var(--acento); }
+  .hoy-cab b { font-size: 18px; display: block; }
+  .hoy-cab .eq { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .hoy-indice { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+  .hoy-indice a { color: var(--texto); text-decoration: none; padding: 5px 2px; font-size: 15px; display: flex; gap: 8px; }
+  .hoy-indice a .n { color: var(--acento); font-weight: 700; width: 20px; text-align: right; flex: none; }
+  .hoy-indice a.mio { color: var(--ok); }
+  .hoy-cancion { margin-bottom: 14px; padding: 0; overflow: hidden; scroll-margin-top: 70px; }
+  .hoy-cancion.mio { border-color: var(--ok); }
+  .hoy-cancion .cab { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--panel2); border-bottom: 1px solid var(--borde); }
+  .hoy-cancion .cab .n { color: var(--acento); font-weight: 800; font-size: 20px; min-width: 22px; }
+  .hoy-cancion .cab .info { flex: 1; min-width: 0; }
+  .hoy-cancion .cab .tit { font-weight: 700; font-size: 18px; cursor: pointer; }
+  .hoy-cancion .cab .sub { font-size: 14px; color: var(--tenue); margin-top: 2px; }
+  .hoy-cancion .cab .tonoG { font-size: 20px; font-weight: 800; color: var(--acento); }
+  .hoy-cancion .cuerpo { padding: 12px 14px 16px; }
+  .hoy-cancion .notas { font-size: 14px; color: var(--tenue); margin-top: 10px; }
+  .letra-limpia { text-align: center; line-height: 1.5; }
+  .letra-limpia .estrofa { margin-bottom: 1.1em; }
+  .letra-limpia .etq { font-size: .62em; letter-spacing: .08em; text-transform: uppercase; color: var(--acento2); font-weight: 700; margin-bottom: 2px; }
+  .hoy-parte { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); margin: 16px 2px 8px; }
+  .hoy-parte.coros { color: #f59e0b; }
+  .hoy-arriba { position: fixed; right: 18px; bottom: 22px; z-index: 5; border-radius: 99px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
 </style>
 </head>
 <body>
@@ -104,6 +133,7 @@
       <input id="buscar" type="search" placeholder="Buscar alabanza, hermano o letra…">
     </div>
     <div class="filtros" id="filtros">
+      <button data-f="hoy">⭐ Hoy</button>
       <button data-f="cultos" class="activo">📅 Cultos</button>
       <button data-f="mias">🙋 Lo que me toca</button>
       <button data-f="hermanos">👥 Hermanos</button>
@@ -390,6 +420,82 @@ function pintarHermanos(cont) {
   $('nuevoHermano').onclick = () => abrirModalPart({ nombre: $('buscar').value.trim() });
 }
 
+// ---------- HOY: lo que se canta y se toca hoy ----------
+let modoHoy = leerLocal('modoHoy') === 'acordes' ? 'acordes' : 'letra';   // letra = sin partitura · acordes = con partitura
+let tamHoy = +leerLocal('tamHoy') || 20, latinoHoy, hoyOtro = null;
+function letraLimpiaHTML(texto) {
+  return analizarLetra(texto).map(sec => {
+    const lineas = sec.lineas.map(l => String(l.letra || '').replace(/\s{2,}/g, ' ').trim()).filter(Boolean);
+    if (!lineas.length) return '';
+    return `<div class="estrofa">${sec.etiqueta ? `<div class="etq">${escaparHTML(sec.etiqueta)}</div>` : ''}${lineas.map(escaparHTML).join('<br>')}</div>`;
+  }).join('') || '<span class="tenue">Sin letra</span>';
+}
+function bloqueHoy(cu, conAc, titulo) {
+  const ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
+  const num = new Map(ts.map((t, i) => [t.id, i + 1]));
+  const ps = participacionesDe(prog, cu.id);
+  const equipo = ps.map(x => `<span class="chip ${esMio(x.nombre) ? 'mio' : ''}" style="padding-right:11px"><b>${escaparHTML(x.nombre)}</b><span>${escaparHTML(x.rol || '')}</span></span>`).join('');
+  let h = `<div class="tarjeta hoy-cab">
+    <small class="tenue">${titulo}</small>
+    <b>${escaparHTML(fechaBonita(cu.fecha))}</b>
+    <span class="tenue">${escaparHTML(cu.nombre)} · ${ts.length} alabanza(s)</span>
+    ${equipo ? `<div class="eq">${equipo}</div>` : ''}
+    ${ts.length > 1 ? `<div class="hoy-indice">${ts.map(t => { const c = cancionDe(t.cancionId); return `<a href="#" data-ir="${t.id}" class="${esMio(t.cantante) ? 'mio' : ''}"><span class="n">${num.get(t.id)}</span><span>${escaparHTML(c.titulo)}${t.cantante ? ' — ' + escaparHTML(t.cantante) : ''}</span></a>`; }).join('')}</div>` : ''}
+  </div>`;
+  if (!ts.length) return h + '<div class="tarjeta tenue">Todavía no hay alabanzas en este culto.</div>';
+  for (const p of partesDe(ts)) {
+    h += `<div class="hoy-parte ${p.tipo || ''}">${nombreTipo(p.tipo)}</div>`;
+    for (const t of p.turnos) {
+      const c = cancionDe(t.cancionId), tono = tonoTurno(t, c);
+      const pasos = semitonos(c.tono, tono) || 0;
+      const tonoVer = conAc && tono ? (c.tono ? transponerAcorde(c.tono, pasos, latinoHoy) : tono) : tono;
+      const cuerpo = conAc
+        ? `<div class="vista-acordes">${analizarLetra(c.letra).map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latinoHoy)}</div>`).join('') || '<span class="tenue">Sin letra</span>'}</div>${c.notas ? `<div class="notas">📝 ${escaparHTML(c.notas)}</div>` : ''}`
+        : `<div class="letra-limpia">${letraLimpiaHTML(c.letra)}</div>`;
+      h += `<div class="tarjeta hoy-cancion ${esMio(t.cantante) ? 'mio' : ''}" id="hoy-${t.id}">
+        <div class="cab"><span class="n">${num.get(t.id)}</span>
+          <div class="info"><div class="tit" data-id="${c.id}">${escaparHTML(c.titulo)}</div>
+            <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${c.autor ? ' · ' + escaparHTML(c.autor) : ''}</div></div>
+          ${tonoVer ? `<span class="tonoG">${escaparHTML(tonoVer)}</span>` : ''}
+        </div>
+        <div class="cuerpo" style="font-size:${conAc ? Math.max(12, tamHoy - 4) : tamHoy}px">${cuerpo}</div>
+      </div>`;
+    }
+  }
+  return h;
+}
+function pintarHoy(cont) {
+  const o = cultosOrdenados(prog), hoy = hoyISO();
+  const deHoy = o.proximos.filter(cu => cu.fecha === hoy);
+  const sig = o.proximos.find(cu => cu.fecha > hoy);
+  const conAc = modoHoy === 'acordes';
+  let h = `<div class="modo-hoy">
+      <button data-modo="letra" class="${conAc ? '' : 'sel'}">🎤 Sin partitura<small>Solo la letra · para los que cantan</small></button>
+      <button data-modo="acordes" class="${conAc ? 'sel' : ''}">🎹 Con partitura<small>Letra con acordes · para los músicos</small></button>
+    </div>
+    <div class="herram hoy-herr">
+      ${conAc ? `<button class="chico" data-notacion="1">${latinoHoy === undefined ? 'Do/C' : latinoHoy ? 'Do' : 'C'}</button>` : ''}
+      <span style="flex:1"></span>
+      <button class="chico" data-tam="-2">A−</button><button class="chico" data-tam="2">A+</button>
+    </div>`;
+  if (deHoy.length) h += deHoy.map(cu => bloqueHoy(cu, conAc, '⭐ HOY')).join('');
+  else if (hoyOtro && sig && hoyOtro === sig.id) h += `<div class="tenue" style="margin-bottom:8px">Hoy no hay culto. Este es el próximo, para ensayar:</div>` + bloqueHoy(sig, conAc, '📅 PRÓXIMO CULTO');
+  else h += `<div class="vacio">Hoy no hay culto programado.${sig ? `<br>El próximo es <b>${escaparHTML(fechaBonita(sig.fecha))}</b> · ${escaparHTML(sig.nombre)}<br><br><button class="prim" data-ver-proximo="${sig.id}">Ver el próximo para ensayar</button>` : ''}</div>`;
+  cont.innerHTML = h;
+}
+function clicHoy(e) {
+  const b = e.target.closest('[data-modo],[data-tam],[data-notacion],[data-ver-proximo],[data-ir]');
+  if (!b) return false;
+  e.preventDefault();
+  if (b.dataset.modo) { modoHoy = b.dataset.modo; guardarLocal('modoHoy', modoHoy); }
+  else if (b.dataset.tam) { tamHoy = Math.min(40, Math.max(12, tamHoy + +b.dataset.tam)); guardarLocal('tamHoy', tamHoy); }
+  else if (b.dataset.notacion) latinoHoy = latinoHoy === undefined ? true : latinoHoy ? false : undefined;
+  else if (b.dataset.verProximo) hoyOtro = b.dataset.verProximo;
+  else if (b.dataset.ir) { const el = $('hoy-' + b.dataset.ir); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return true; }
+  pintarLista();
+  return true;
+}
+
 function pintarLista() {
   const q = normalizar($('buscar').value);
   const cont = $('lista');
@@ -397,6 +503,7 @@ function pintarLista() {
   $('buscar').placeholder = filtro === 'hermanos' ? 'Buscar hermano por nombre…' : 'Buscar alabanza, hermano o letra…';
   actualizarNombres();
   if (filtro === 'hermanos') return pintarHermanos(cont);
+  if (filtro === 'hoy') return pintarHoy(cont);
   if (filtro === 'cultos') {
     const o = cultosOrdenados(prog);
     let h = o.proximos.length ? o.proximos.map(c => tarjetaCulto(c)).join('') : '<div class="vacio">No hay cultos programados.<br>Toca “＋ Nuevo culto” para crear uno.</div>';
@@ -426,6 +533,7 @@ function pintarLista() {
   }
 }
 $('lista').onclick = async e => {
+  if (filtro === 'hoy' && clicHoy(e)) return;
   const b = e.target.closest('button');
   if (b && b.dataset.agregarA) return abrirModalTurno({ cultoId: b.dataset.agregarA });
   if (b && b.dataset.editarCulto) return abrirModalCulto(prog.cultos.find(c => c.id === b.dataset.editarCulto));
@@ -717,6 +825,10 @@ function repintar() {
 }
 async function cargar() {
   try { [canciones, estado, prog] = await Promise.all([API.canciones(), API.estado(), API.programa()]); } catch {}
+  if (cultosOrdenados(prog).proximos.some(cu => cu.fecha === hoyISO())) {
+    filtro = 'hoy';
+    $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x.dataset.f === 'hoy'));
+  }
   pintarLista();
 }
 escucharEventos({
