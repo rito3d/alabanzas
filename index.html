@@ -73,6 +73,15 @@
   .hermano .info { flex: 1; min-width: 0; } .hermano .sub { font-size: 13px; color: var(--tenue); }
   .tono-chip { cursor: pointer; }
   .tonoT { color: var(--acento); font-weight: 700; }
+  .parte { padding: 8px 14px 6px; border-top: 1px solid var(--borde); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); background: rgba(79,182,255,.06); }
+  .parte.coros { color: #f59e0b; background: rgba(245,158,11,.07); }
+  .parte.sin { color: var(--tenue); background: none; }
+  .parte span { font-weight: 400; color: var(--tenue); margin-left: 4px; }
+  .turno.ordenando { cursor: default; }
+  .ayuda-orden { padding: 8px 14px; font-size: 13px; color: var(--tenue); border-top: 1px solid var(--borde); }
+  .tipos { display: flex; gap: 8px; margin-top: 6px; }
+  .tipos button { flex: 1; padding: 11px; }
+  .tipos button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -137,8 +146,10 @@
     </div>
     <datalist id="listaCantantes"></datalist>
     <div id="cajaCultoEditor">
-      <label>¿Para qué culto? (opcional)</label>
-      <select id="fCulto"></select>
+      <div class="fila">
+        <div><label>¿Para qué culto? (opcional)</label><select id="fCulto"></select></div>
+        <div style="flex:.6"><label>Parte</label><select id="fTipo"><option value="adoracion">🙏 Adoración</option><option value="coros">🎉 Coros</option></select></div>
+      </div>
     </div>
     <label>Autor (opcional)</label>
     <input id="fAutor" placeholder="Autor o ministerio" autocomplete="off">
@@ -193,6 +204,8 @@ Santo, santo…"></textarea>
       <div style="flex:.45"><label>Tono</label><input id="mtTono" placeholder="Ej: G" autocomplete="off"></div>
     </div>
     <div class="tenue" id="mtTonoAyuda" style="font-size:12px;margin-top:4px"></div>
+    <label>¿En qué parte del culto va?</label>
+    <div class="tipos" id="mtTipos"><button data-tipo="adoracion">🙏 Adoración</button><button data-tipo="coros">🎉 Coros</button></div>
     <div class="acciones">
       <button id="mtCancelar">Cancelar</button>
       <button class="prim" id="mtGuardar">✔ Agregar</button>
@@ -230,6 +243,8 @@ Santo, santo…"></textarea>
     <input id="mcFecha" type="date">
     <label>Nombre</label>
     <input id="mcNombre" list="nombresCulto" placeholder="Ej: Noche de alabanza" autocomplete="off">
+    <label>¿Qué va primero?</label>
+    <div class="tipos" id="mcPrimero"><button data-tipo="adoracion">🙏 Adoración</button><button data-tipo="coros">🎉 Coros</button></div>
     <datalist id="nombresCulto">
       <option value="Noche de alabanza"><option value="Culto de alabanza"><option value="Culto dominical">
       <option value="Culto de oración"><option value="Vigilia"><option value="Culto de jóvenes">
@@ -248,7 +263,7 @@ Santo, santo…"></textarea>
 import './nube.js';
 
 let canciones = [], estado = {}, prog = { cultos: [], turnos: [] }, filtro = 'cultos', verPasados = false;
-let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista', hermanoSel = null;
+let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista', hermanoSel = null, ordenando = null;
 const $ = id => document.getElementById(id);
 
 function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch {} }
@@ -286,25 +301,33 @@ function filaCancion(c) {
 }
 function tarjetaCulto(cu, soloMios) {
   let ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
+  const numero = new Map(ts.map((t, i) => [t.id, i + 1]));   // número general del culto (1, 2, 3…)
   if (soloMios) ts = ts.filter(t => esMio(t.cantante));
-  const esHoy = cu.fecha === hoyISO();
+  const esHoy = cu.fecha === hoyISO(), ordenar = ordenando === cu.id && !soloMios;
+  const fila = (t, pos, total) => {
+    const c = cancionDe(t.cancionId), tono = tonoTurno(t, c);
+    const botones = soloMios ? '' : ordenar
+      ? `<button class="mini" data-mover="${t.id}" data-dir="-1" ${pos === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button><button class="mini" data-mover="${t.id}" data-dir="1" ${pos === total - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>`
+      : `<button class="mini" data-editar-turno="${t.id}" title="Cambiar quién canta, el tono o la parte">✏️</button><button class="mini" data-quitar-turno="${t.id}" title="Quitar de este culto">✖</button>`;
+    return `<div class="turno ${esMio(t.cantante) ? 'mio' : ''} ${ordenar ? 'ordenando' : ''}" ${ordenar ? '' : `data-id="${c.id}"`}>
+      <span class="n">${numero.get(t.id)}</span>
+      <div class="info"><div class="tit">${escaparHTML(c.titulo)}</div>
+        <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${tono ? ' · <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}${t.tono && c.tono && t.tono !== c.tono ? ' <span class="tenue">(original ' + escaparHTML(c.tono) + ')</span>' : ''}</div></div>
+      ${botones}
+    </div>`;
+  };
+  const cuerpo = ts.length ? partesDe(ts).map(p => `<div class="parte ${p.tipo || 'sin'}">${nombreTipo(p.tipo)} <span>${p.turnos.length}</span></div>` +
+      p.turnos.map((t, k) => fila(t, k, p.turnos.length)).join('')).join('')
+    : `<div class="turno tenue" style="cursor:default">Todavía no hay alabanzas en este culto.</div>`;
   return `<div class="tarjeta culto ${esHoy ? 'hoy' : ''}">
     <div class="culto-cab">
       <div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)} · ${turnosDe(prog, cu.id).length} alabanza(s)</small></div>
-      ${soloMios ? '' : `<button class="mini" data-editar-culto="${cu.id}" title="Cambiar fecha o nombre">✏️</button>`}
+      ${soloMios ? '' : `${ts.length > 1 ? `<button class="mini ${ordenar ? 'prim' : ''}" data-ordenar="${cu.id}" title="Cambiar el orden">${ordenar ? '✔ Listo' : '↕ Ordenar'}</button>` : ''}<button class="mini" data-editar-culto="${cu.id}" title="Cambiar fecha, nombre o qué va primero">✏️</button>`}
     </div>
-    ${ts.length ? ts.map((t, i) => {
-      const c = cancionDe(t.cancionId);
-      const tono = tonoTurno(t, c);
-      return `<div class="turno ${esMio(t.cantante) ? 'mio' : ''}" data-id="${c.id}">
-        <span class="n">${soloMios ? '•' : i + 1}</span>
-        <div class="info"><div class="tit">${escaparHTML(c.titulo)}</div>
-          <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${tono ? ' · <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}${t.tono && c.tono && t.tono !== c.tono ? ' <span class="tenue">(original ' + escaparHTML(c.tono) + ')</span>' : ''}</div></div>
-        ${soloMios ? '' : `<button class="mini" data-editar-turno="${t.id}" title="Cambiar quién canta o el tono">✏️</button><button class="mini" data-quitar-turno="${t.id}" title="Quitar de este culto">✖</button>`}
-      </div>`;
-    }).join('') : `<div class="turno tenue" style="cursor:default">Todavía no hay alabanzas en este culto.</div>`}
-    ${equipoHTML(cu, soloMios)}
-    ${soloMios ? '' : `<div class="culto-pie"><button data-agregar-a="${cu.id}">＋ Alabanza</button><button data-agregar-hermano="${cu.id}">＋ Hermano</button></div>`}
+    ${ordenar ? `<div class="ayuda-orden">Usa ▲▼ para cambiar el orden dentro de cada parte. Para pasar una alabanza a Adoración o Coros, toca «✔ Listo» y luego ✏️.</div>` : ''}
+    ${cuerpo}
+    ${ordenar ? '' : equipoHTML(cu, soloMios)}
+    ${soloMios || ordenar ? '' : `<div class="culto-pie"><button data-agregar-a="${cu.id}">＋ Alabanza</button><button data-agregar-hermano="${cu.id}">＋ Hermano</button></div>`}
   </div>`;
 }
 // quién sirve en el culto: los que tocan/dirigen y los que cantan alguna alabanza
@@ -402,6 +425,17 @@ $('lista').onclick = async e => {
   const b = e.target.closest('button');
   if (b && b.dataset.agregarA) return abrirModalTurno({ cultoId: b.dataset.agregarA });
   if (b && b.dataset.editarCulto) return abrirModalCulto(prog.cultos.find(c => c.id === b.dataset.editarCulto));
+  if (b && b.dataset.ordenar) { ordenando = ordenando === b.dataset.ordenar ? null : b.dataset.ordenar; return pintarLista(); }
+  if (b && b.dataset.mover) {
+    const t = prog.turnos.find(x => x.id === b.dataset.mover); if (!t) return;
+    const cambios = moverTurno(turnosDe(prog, t.cultoId).filter(x => cancionDe(x.cancionId)), t.id, +b.dataset.dir);
+    if (!cambios.length) return;
+    try {
+      await Promise.all(cambios.map(x => API.guardarTurno(x)));
+      prog = await API.programa(); pintarLista();
+    } catch (e2) { aviso(e2.message, true); }
+    return;
+  }
   if (b && b.dataset.agregarHermano) return abrirModalPart({ cultoId: b.dataset.agregarHermano });
   if (b && b.dataset.editarTurno) { const t = prog.turnos.find(x => x.id === b.dataset.editarTurno); return t && abrirModalTurno({ turno: t }); }
   if (b && b.dataset.quitarPart) {
@@ -492,11 +526,20 @@ function abrirModalTurno(o) {
   $('mtCantante').value = o.turno ? (o.turno.cantante || '') : (c && c.cantante) || miNombre || '';
   $('mtTono').value = o.turno ? tonoTurno(o.turno, c) : '';
   $('mtGuardar').textContent = o.turno ? '✔ Guardar' : '✔ Agregar';
+  mt.tipo = o.turno ? (o.turno.tipo || '') : tipoSugerido(o.cancionId);
+  pintarTipos();
   if (!o.turno) sugerirTono();
   $('mtBuscar').value = '';
   pintarModalTurno();
   $('modalTurno').classList.remove('oculto');
 }
+// Adoración o Coros: se propone lo que se usó antes con esa alabanza
+function tipoSugerido(cancionId) {
+  const prev = prog.turnos.filter(t => t.cancionId === cancionId && t.tipo).sort((a, b) => String(b.actualizada).localeCompare(String(a.actualizada)))[0];
+  return prev ? prev.tipo : '';
+}
+function pintarTipos() { $('mtTipos').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === mt.tipo)); }
+$('mtTipos').onclick = e => { const b = e.target.closest('[data-tipo]'); if (b) { mt.tipo = b.dataset.tipo; pintarTipos(); } };
 // el tono se propone solo: el que ese hermano usó antes con esa alabanza, o el original
 function sugerirTono() {
   const c = cancionDe(mt.cancionId);
@@ -516,18 +559,21 @@ function pintarModalTurno() {
   $('mtCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mt.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
 }
 $('mtBuscar').oninput = pintarModalTurno;
-$('elegirCancionLista').onclick = e => { const o = e.target.closest('[data-c]'); if (!o) return; mt.cancionId = o.dataset.c; const c = cancionDe(mt.cancionId); if (c && c.cantante && !$('mtCantante').value) $('mtCantante').value = c.cantante; sugerirTono(); pintarModalTurno(); };
+$('elegirCancionLista').onclick = e => { const o = e.target.closest('[data-c]'); if (!o) return; mt.cancionId = o.dataset.c; if (!mt.tipo) { mt.tipo = tipoSugerido(mt.cancionId); pintarTipos(); } const c = cancionDe(mt.cancionId); if (c && c.cantante && !$('mtCantante').value) $('mtCantante').value = c.cantante; sugerirTono(); pintarModalTurno(); };
 $('mtCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (!o) return; mt.cultoId = o.dataset.cu; pintarModalTurno(); };
 $('mtCancelar').onclick = () => $('modalTurno').classList.add('oculto');
 $('modalTurno').onclick = e => { if (e.target.id === 'modalTurno') $('modalTurno').classList.add('oculto'); };
 $('mtGuardar').onclick = async () => {
   if (!mt.cancionId) return aviso('Elige la alabanza', true);
   if (!mt.cultoId) return aviso('Elige el culto', true);
+  if (!mt.tipo) return aviso('Elige si va en Adoración o en Coros', true);
   const cantante = $('mtCantante').value.trim(), tono = $('mtTono').value.trim();
   // la misma alabanza puede ir 2 veces en un culto si la cantan hermanos distintos
   const ya = mt.turno || prog.turnos.find(t => t.cultoId === mt.cultoId && t.cancionId === mt.cancionId && mismoNombre(t.cantante, cantante));
   try {
-    await API.guardarTurno(ya ? { ...ya, cantante, tono } : { cultoId: mt.cultoId, cancionId: mt.cancionId, cantante, tono });
+    // al cambiar de parte, va al final de esa parte
+    const alFinal = !ya || (ya.tipo || '') !== mt.tipo ? Date.now() : ya.orden;
+    await API.guardarTurno(ya ? { ...ya, cantante, tono, tipo: mt.tipo, orden: alFinal } : { cultoId: mt.cultoId, cancionId: mt.cancionId, cantante, tono, tipo: mt.tipo });
     if (cantante && !miNombre) { miNombre = cantante; guardarLocal('miNombre', miNombre); }
     prog = await API.programa();
     $('modalTurno').classList.add('oculto');
@@ -577,13 +623,16 @@ $('mpGuardar').onclick = async () => {
 };
 
 // ---------- Ventana: nuevo culto ----------
-let mcEditando = null, mcDespues = null;
+let mcEditando = null, mcDespues = null, mcPrimero = 'adoracion';
+function pintarPrimero() { $('mcPrimero').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === mcPrimero)); }
+$('mcPrimero').onclick = e => { const b = e.target.closest('[data-tipo]'); if (b) { mcPrimero = b.dataset.tipo; pintarPrimero(); } };
 function abrirModalCulto(cu, despues) {
   mcEditando = cu; mcDespues = despues || null;
   $('mcTitulo').textContent = cu ? 'Cambiar culto' : 'Nuevo culto';
   $('mcFecha').value = cu ? cu.fecha : hoyISO();
   $('mcNombre').value = cu ? cu.nombre : 'Culto de alabanza';
   $('mcBorrar').classList.toggle('oculto', !cu);
+  mcPrimero = cu && cu.primero === 'coros' ? 'coros' : 'adoracion'; pintarPrimero();
   $('modalCulto').classList.remove('oculto');
 }
 $('mcCancelar').onclick = () => $('modalCulto').classList.add('oculto');
@@ -591,7 +640,7 @@ $('modalCulto').onclick = e => { if (e.target.id === 'modalCulto') $('modalCulto
 $('mcGuardar').onclick = async () => {
   if (!$('mcFecha').value) return aviso('Elige la fecha', true);
   try {
-    await API.guardarCulto({ id: mcEditando && mcEditando.id, fecha: $('mcFecha').value, nombre: $('mcNombre').value });
+    await API.guardarCulto({ id: mcEditando && mcEditando.id, fecha: $('mcFecha').value, nombre: $('mcNombre').value, primero: mcPrimero });
     prog = await API.programa();
     $('modalCulto').classList.add('oculto');
     aviso('Culto guardado ✔');
@@ -643,7 +692,7 @@ $('btnGuardar').onclick = async () => {
     const g = await API.guardarCancion(datos);
     if (datos.cantante.trim() && !miNombre) { miNombre = datos.cantante.trim(); guardarLocal('miNombre', miNombre); }
     canciones = await API.canciones();
-    if (cultoId) { await API.guardarTurno({ cultoId, cancionId: g.id, cantante: datos.cantante.trim() }); prog = await API.programa(); }
+    if (cultoId) { await API.guardarTurno({ cultoId, cancionId: g.id, cantante: datos.cantante.trim(), tono: datos.tono.trim(), tipo: $('fTipo').value }); prog = await API.programa(); }
     aviso('Guardada ✔ Se copiará sola a la PC de la iglesia');
     abrir(g.id);
   } catch (e) { aviso('No se pudo guardar: ' + e.message, true); }

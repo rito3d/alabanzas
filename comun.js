@@ -81,7 +81,29 @@ function cultosOrdenados(prog) {
 }
 // el culto de hoy; si no hay, el próximo; si no, el último que hubo
 function cultoDeHoy(prog) { const o = cultosOrdenados(prog); return o.proximos[0] || o.pasados[0] || null; }
-function turnosDe(prog, cultoId) { return ((prog && prog.turnos) || []).filter(t => t.cultoId === cultoId).sort((a, b) => a.orden - b.orden); }
+// Cada culto se divide en Adoración y Coros. "primero" dice qué parte va antes; las que no tienen parte van al final.
+const TIPOS = { adoracion: { nombre: 'Adoración', icono: '🙏' }, coros: { nombre: 'Coros', icono: '🎉' } };
+function ordenTipos(cu) { return cu && cu.primero === 'coros' ? ['coros', 'adoracion', ''] : ['adoracion', 'coros', '']; }
+function turnosDe(prog, cultoId) {
+  const cu = ((prog && prog.cultos) || []).find(c => c.id === cultoId);
+  const rango = ordenTipos(cu), r = t => { const i = rango.indexOf(t.tipo || ''); return i < 0 ? 2 : i; };
+  return ((prog && prog.turnos) || []).filter(t => t.cultoId === cultoId).sort((a, b) => r(a) - r(b) || a.orden - b.orden);
+}
+// mover una alabanza arriba/abajo dentro de su parte (Adoración o Coros). Devuelve los turnos con su nuevo "orden".
+function moverTurno(lista, turnoId, dir) {
+  const i = lista.findIndex(t => t.id === turnoId), j = i + dir;
+  if (i < 0 || j < 0 || j >= lista.length || (lista[j].tipo || '') !== (lista[i].tipo || '')) return [];
+  const nueva = lista.slice(); [nueva[i], nueva[j]] = [nueva[j], nueva[i]];
+  const base = Date.now();
+  return nueva.map((t, k) => ({ ...t, orden: base + k }));
+}
+// agrupa la lista ya ordenada en partes, para pintar encabezados
+function partesDe(lista) {
+  const partes = [];
+  for (const t of lista) { const k = t.tipo || ''; if (!partes.length || partes[partes.length - 1].tipo !== k) partes.push({ tipo: k, turnos: [] }); partes[partes.length - 1].turnos.push(t); }
+  return partes;
+}
+const nombreTipo = k => k && TIPOS[k] ? TIPOS[k].icono + ' ' + TIPOS[k].nombre : '• Sin clasificar';
 
 // Conexión en vivo con reconexión automática
 function escucharEventos(manejadores) {

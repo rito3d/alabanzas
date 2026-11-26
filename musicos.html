@@ -59,7 +59,7 @@ const cancionDe = id => canciones.find(c => c.id === id);
 function pintarSelector() {
   const valor = manual ? manualCulto + '|' + manual + (manualTurno ? '|' + manualTurno : '') : '';
   const op = (cu, t, i) => { const c = cancionDe(t.cancionId); const v = cu.id + '|' + c.id + '|' + t.id;
-    return `<option value="${v}" ${v === valor ? 'selected' : ''}>${i + 1}. ${escaparHTML(c.titulo)}${t.cantante ? ' — ' + escaparHTML(t.cantante) : ''}${tonoTurno(t, c) ? ' (' + escaparHTML(tonoTurno(t, c)) + ')' : ''}</option>`; };
+    return `<option value="${v}" ${v === valor ? 'selected' : ''}>${i + 1}. ${t.tipo && TIPOS[t.tipo] ? TIPOS[t.tipo].icono + ' ' : ''}${escaparHTML(c.titulo)}${t.cantante ? ' — ' + escaparHTML(t.cantante) : ''}${tonoTurno(t, c) ? ' (' + escaparHTML(tonoTurno(t, c)) + ')' : ''}</option>`; };
   const grupos = cultosOrdenados(prog).proximos.map(cu => {
     const ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
     return ts.length ? `<optgroup label="📅 ${escaparHTML(fechaBonita(cu.fecha, true))} · ${escaparHTML(cu.nombre)}">${ts.map((t, i) => op(cu, t, i)).join('')}</optgroup>` : '';

@@ -95,8 +95,8 @@ function programaVisible() {
   const cultos = [], turnos = [], participaciones = [];
   for (const [id, d] of progDocs) {
     if (d.borrada) continue;
-    if (id.startsWith('c_')) cultos.push({ id, fecha: d.fecha || '', nombre: d.nombre || 'Culto', actualizada: d.actualizada || '' });
-    else if (id.startsWith('t_')) turnos.push({ id, cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', orden: Number(d.orden) || 0, actualizada: d.actualizada || '' });
+    if (id.startsWith('c_')) cultos.push({ id, fecha: d.fecha || '', nombre: d.nombre || 'Culto', primero: d.primero === 'coros' ? 'coros' : 'adoracion', actualizada: d.actualizada || '' });
+    else if (id.startsWith('t_')) turnos.push({ id, cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', tipo: d.tipo || '', orden: Number(d.orden) || 0, actualizada: d.actualizada || '' });
     else participaciones.push({ id, cultoId: d.cultoId, nombre: d.nombre || '', rol: d.rol || '', actualizada: d.actualizada || '' });
   }
   const ids = new Set(cultos.map(c => c.id));
@@ -142,15 +142,15 @@ window.API = {
   async programa() { await primeraCarga; return programaVisible(); },
   async guardarCulto(c) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(c.fecha || ''))) throw new Error('Elige la fecha del culto');
-    return guardarProg(c.id || nuevoId('c_'), { fecha: c.fecha, nombre: String(c.nombre || 'Culto de alabanza').trim().slice(0, 80) || 'Culto de alabanza', borrada: false });
+    return guardarProg(c.id || nuevoId('c_'), { fecha: c.fecha, nombre: String(c.nombre || 'Culto de alabanza').trim().slice(0, 80) || 'Culto de alabanza', primero: c.primero === 'coros' ? 'coros' : 'adoracion', borrada: false });
   },
-  async borrarCulto(id) { const d = progDocs.get(id); if (d) guardarProg(id, { fecha: d.fecha, nombre: d.nombre, borrada: true }); return { ok: true }; },
+  async borrarCulto(id) { const d = progDocs.get(id); if (d) guardarProg(id, { fecha: d.fecha, nombre: d.nombre, primero: d.primero || 'adoracion', borrada: true }); return { ok: true }; },
   async guardarTurno(t) {
     const antes = t.id && progDocs.get(t.id);
     const orden = t.orden !== undefined && t.orden !== null && t.orden !== '' ? Math.round(+t.orden) : (antes ? antes.orden : Date.now());
-    return guardarProg(t.id || nuevoId('t_'), { cultoId: t.cultoId, cancionId: t.cancionId, cantante: String(t.cantante || '').trim().slice(0, 80), tono: String(t.tono || '').trim().slice(0, 12), orden, borrada: false });
+    return guardarProg(t.id || nuevoId('t_'), { cultoId: t.cultoId, cancionId: t.cancionId, cantante: String(t.cantante || '').trim().slice(0, 80), tono: String(t.tono || '').trim().slice(0, 12), tipo: ['adoracion', 'coros'].includes(t.tipo) ? t.tipo : (antes ? antes.tipo || '' : ''), orden, borrada: false });
   },
-  async borrarTurno(id) { const d = progDocs.get(id); if (d) guardarProg(id, { cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', orden: d.orden || 0, borrada: true }); return { ok: true }; },
+  async borrarTurno(id) { const d = progDocs.get(id); if (d) guardarProg(id, { cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', tipo: d.tipo || '', orden: d.orden || 0, borrada: true }); return { ok: true }; },
   async guardarParticipacion(x) {
     const nombre = String(x.nombre || '').trim().slice(0, 80);
     if (!nombre) throw new Error('Escribe el nombre del hermano');
