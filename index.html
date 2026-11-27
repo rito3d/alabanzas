@@ -3,841 +3,359 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#10131a">
-<title>Alabanzas MMM</title>
+<title>Curso de Discipulado</title>
+<meta name="theme-color" content="#1E2A5A">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icono.svg">
-<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Discipulado">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Alabanzas">
-<script src="instalar.js" defer></script>
-<link rel="stylesheet" href="estilo.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  main { max-width: 760px; margin: 0 auto; padding: 14px 14px 100px; }
-  .buscador { display: flex; gap: 8px; margin-bottom: 10px; }
-  .filtros { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
-  .filtros button { flex: none; border-radius: 99px; padding: 7px 14px; font-size: 14px; }
-  .cancion { display: flex; gap: 12px; align-items: center; padding: 13px 14px; margin-bottom: 8px; cursor: pointer; }
-  .cancion .info { flex: 1; min-width: 0; }
-  .cancion .tit { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cancion .sub { font-size: 14px; color: var(--tenue); margin-top: 2px; }
-  .tono { font-weight: 700; color: var(--acento); font-size: 15px; min-width: 34px; text-align: center; }
-  .encult { color: var(--ok); font-size: 12px; font-weight: 600; }
-  .flotante { position: fixed; right: 18px; bottom: 22px; border-radius: 99px; padding: 15px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 17px; z-index: 5; }
-  .ayuda { font-size: 13px; color: var(--tenue); background: var(--panel); border: 1px dashed var(--borde); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.5; }
-  .ayuda code { color: var(--acento); }
-  .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
-  .acciones button { flex: 1; }
-  .ver-cab h2 { margin: 6px 0 2px; font-size: 22px; }
-  .herram { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
-  .herram .tonoactual { min-width: 56px; text-align: center; font-weight: 700; color: var(--acento); }
-  #vistaLetra { font-size: 16px; }
-  .vacio { text-align: center; color: var(--tenue); padding: 40px 10px; }
-  #textoLetra { min-height: 340px; }
-  .diap-prev { display: grid; gap: 8px; margin-top: 10px; }
-  .diap-prev div { background: #000; border-radius: 8px; padding: 10px; text-align: center; font-size: 14px; line-height: 1.4; }
-  .diap-prev small { display: block; color: var(--acento2); font-size: 11px; margin-bottom: 4px; text-transform: uppercase; }
-  /* cultos */
-  .culto { margin-bottom: 14px; padding: 0; overflow: hidden; }
-  .culto.hoy { border-color: var(--acento); }
-  .culto-cab { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--panel2); }
-  .culto-cab .f { flex: 1; min-width: 0; }
-  .culto-cab b { display: block; font-size: 16px; }
-  .culto-cab small { color: var(--tenue); }
-  .turno { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--borde); cursor: pointer; }
-  .turno .n { color: var(--acento); font-weight: 700; width: 20px; text-align: center; }
-  .turno .info { flex: 1; min-width: 0; }
-  .turno .tit { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .turno .sub { font-size: 14px; color: var(--tenue); }
-  .turno.mio .sub b { color: var(--ok); }
-  .culto-pie { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--borde); }
-  .culto-pie button { flex: 1; font-size: 14px; padding: 9px; }
-  .mini { padding: 4px 9px; font-size: 13px; border-radius: 8px; }
-  .seccion-t { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--tenue); margin: 18px 2px 8px; }
-  .programada { background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.35); color: var(--ok); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 14px; }
-  /* ventana emergente */
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
-  .modal .hoja { background: var(--panel); border: 1px solid var(--borde); border-radius: 16px 16px 0 0; width: 100%; max-width: 760px; max-height: 88vh; overflow-y: auto; padding: 18px 16px 24px; }
-  @media (min-width: 700px) { .modal { align-items: center; } .modal .hoja { border-radius: 16px; } }
-  .modal h3 { margin: 0 0 4px; }
-  .opcion { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--borde); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
-  .opcion.sel { border-color: var(--acento); background: rgba(242,177,52,.08); }
-  .opcion .tit { font-weight: 600; flex: 1; min-width: 0; }
-  #elegirCancionLista { max-height: 40vh; overflow-y: auto; margin-top: 8px; }
-  .equipo { padding: 8px 14px 10px; border-top: 1px solid var(--borde); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .equipo .lbl { font-size: 12px; color: var(--tenue); text-transform: uppercase; letter-spacing: .05em; width: 100%; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel2); border: 1px solid var(--borde); border-radius: 99px; padding: 4px 6px 4px 11px; font-size: 13px; }
-  .chip.mio { border-color: var(--ok); }
-  .chip b { font-weight: 600; } .chip span { color: var(--tenue); }
-  .chip button { padding: 0 6px; border: 0; background: none; font-size: 12px; color: var(--tenue); }
-  .hermano { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
-  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--panel2); border: 1px solid var(--borde); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acento2); flex: none; }
-  .hermano .info { flex: 1; min-width: 0; } .hermano .sub { font-size: 13px; color: var(--tenue); }
-  .tono-chip { cursor: pointer; }
-  .tonoT { color: var(--acento); font-weight: 700; }
-  .parte { padding: 8px 14px 6px; border-top: 1px solid var(--borde); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); background: rgba(79,182,255,.06); }
-  .parte.coros { color: #f59e0b; background: rgba(245,158,11,.07); }
-  .parte.sin { color: var(--tenue); background: none; }
-  .parte span { font-weight: 400; color: var(--tenue); margin-left: 4px; }
-  .turno.ordenando { cursor: default; }
-  .ayuda-orden { padding: 8px 14px; font-size: 13px; color: var(--tenue); border-top: 1px solid var(--borde); }
-  .tipos { display: flex; gap: 8px; margin-top: 6px; }
-  .tipos button { flex: 1; padding: 11px; }
-  .tipos button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
-  /* ======= HOY ======= */
-  .modo-hoy { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-  .modo-hoy button { padding: 10px 8px; line-height: 1.25; white-space: normal; }
-  .modo-hoy button small { display: block; font-weight: 400; font-size: 12px; opacity: .8; }
-  .modo-hoy button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
-  .hoy-herr { margin: 0 0 12px; }
-  .hoy-cab { padding: 12px 14px; margin-bottom: 10px; border-color: var(--acento); }
-  .hoy-cab b { font-size: 18px; display: block; }
-  .hoy-cab .eq { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .hoy-indice { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
-  .hoy-indice a { color: var(--texto); text-decoration: none; padding: 5px 2px; font-size: 15px; display: flex; gap: 8px; }
-  .hoy-indice a .n { color: var(--acento); font-weight: 700; width: 20px; text-align: right; flex: none; }
-  .hoy-indice a.mio { color: var(--ok); }
-  .hoy-cancion { margin-bottom: 14px; padding: 0; overflow: hidden; scroll-margin-top: 70px; }
-  .hoy-cancion.mio { border-color: var(--ok); }
-  .hoy-cancion .cab { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--panel2); border-bottom: 1px solid var(--borde); }
-  .hoy-cancion .cab .n { color: var(--acento); font-weight: 800; font-size: 20px; min-width: 22px; }
-  .hoy-cancion .cab .info { flex: 1; min-width: 0; }
-  .hoy-cancion .cab .tit { font-weight: 700; font-size: 18px; cursor: pointer; }
-  .hoy-cancion .cab .sub { font-size: 14px; color: var(--tenue); margin-top: 2px; }
-  .hoy-cancion .cab .tonoG { font-size: 20px; font-weight: 800; color: var(--acento); }
-  .hoy-cancion .cuerpo { padding: 12px 14px 16px; }
-  .hoy-cancion .notas { font-size: 14px; color: var(--tenue); margin-top: 10px; }
-  .letra-limpia { text-align: center; line-height: 1.5; }
-  .letra-limpia .estrofa { margin-bottom: 1.1em; }
-  .letra-limpia .etq { font-size: .62em; letter-spacing: .08em; text-transform: uppercase; color: var(--acento2); font-weight: 700; margin-bottom: 2px; }
-  .hoy-parte { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); margin: 16px 2px 8px; }
-  .hoy-parte.coros { color: #f59e0b; }
-  .hoy-arriba { position: fixed; right: 18px; bottom: 22px; z-index: 5; border-radius: 99px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+/* VOICE: calma, práctica, de iglesia — una herramienta de maestro
+   IDEA: la libreta de asistencia del maestro, hecha app
+   PICTURE: la lista misma de alumnos con sus barras de avance
+   COLOUR and TYPE: azul tinta + índigo, naranja solo para faltas; Space Grotesk + Inter
+   LAYOUT: una columna de móvil (máx 520px), cabecera con cifras, pestañas abajo */
+:root{color-scheme:light dark;
+--bg:light-dark(#F4F3EF,#12141c);--card:light-dark(#fff,#1c2030);--ink:light-dark(#1B1F2A,#eef0f6);
+--mute:light-dark(#5E6372,#a7acbb);--line:light-dark(#E7E4DC,#2a2f42);--head:light-dark(#1E2A5A,#1a2350);
+--head2:light-dark(#2F3D75,#27326a);--acc:light-dark(#3B4CCA,#8c99ff);--ok:light-dark(#1F6B3A,#6fd393);
+--okbg:light-dark(#DDF1E3,#173a25);--bad:light-dark(#8A3A0B,#ffb98a);--badbg:light-dark(#FCE9DC,#3d2414);--track:light-dark(#ECEAE4,#2a2f42)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Inter,system-ui,sans-serif;overflow-x:clip}
+.app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-bottom:76px}
+header{background:var(--head);color:#fff;padding:22px 18px 18px;display:flex;flex-direction:column;gap:14px}
+header small{color:#C9D1F0;font-size:13px}
+h1{margin:0;font:700 26px/1.1 'Space Grotesk',sans-serif}
+h2{margin:0;font-size:17px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{background:var(--head2);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#C9D1F0}
+main{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:500 13px Inter,sans-serif;cursor:pointer}
+.chip.on{background:var(--head);border-color:var(--head);color:#fff;font-weight:600}
+.card{background:var(--card);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(20,20,40,.06);border:0;color:inherit;font:inherit;text-align:left;width:100%;cursor:pointer}
+.row{display:flex;align-items:center;gap:12px}
+.av{width:40px;height:40px;border-radius:20px;background:light-dark(#E3E7F7,#2b3566);color:light-dark(#1E2A5A,#dfe3ff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none}
+.grow{flex:1;display:flex;flex-direction:column;gap:2px}
+.name{font-weight:600;font-size:15px}.sub{font-size:13px;color:var(--mute)}.sub.ok{color:var(--ok)}
+.tag{font-size:12px;font-weight:600;padding:4px 8px;border-radius:8px;white-space:nowrap;background:var(--badbg);color:var(--bad)}
+.tag.ok{background:var(--okbg);color:var(--ok)}.tag.hot{background:#B4410B;color:#fff}
+.bar{flex:1;height:8px;border-radius:4px;background:var(--track);overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);border-radius:4px}
+.num{font-size:12px;color:var(--mute);white-space:nowrap}
+.list{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,40,.06)}
+.li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}.li:last-child{border:0}
+.li.pend{background:light-dark(#FFF7F1,#2a1d14)}
+.dot{width:28px;height:28px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700}
+.dot.ok{background:#1F6B3A}.dot.no{background:#B4410B}.dot.next{border:2px solid var(--acc)}.dot.later{border:2px solid var(--line)}
+.btn{min-height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--acc);color:#fff;font:600 15px Inter,sans-serif;cursor:pointer}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px;background:var(--head)}
+.btn.ghost{background:transparent;color:var(--acc);border:1px solid var(--line)}
+.btn:focus-visible,.chip:focus-visible,.card:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.back{width:44px;height:44px;border-radius:12px;background:var(--head2);border:0;color:#fff;font-size:22px;cursor:pointer}
+.alert{background:var(--badbg);color:var(--bad);border-radius:14px;padding:12px 14px;font-size:14px}
+.alert b{display:block}
+input,select{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:16px Inter,sans-serif;padding:0 12px}
+.form{display:flex;gap:8px}.form input{flex:1}
+.toggle{display:flex;gap:6px}.toggle button{min-width:44px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 14px Inter,sans-serif;cursor:pointer}
+.toggle .p.on{background:#1F6B3A;border-color:#1F6B3A;color:#fff}.toggle .f.on{background:#B4410B;border-color:#B4410B;color:#fff}
+nav{position:fixed;bottom:0;left:0;right:0;height:calc(68px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center}
+nav div{max-width:520px;width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+nav button{border:0;background:none;color:var(--mute);font:500 12px Inter,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+nav button.on{color:var(--acc);font-weight:700}
+nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.empty{text-align:center;color:var(--mute);padding:28px 10px;font-size:14px}
+.note{font-size:12px;color:var(--mute);text-align:center}
+.estado{font-size:12px;color:#C9D1F0;display:flex;align-items:center;gap:6px}.estado::before{content:"";width:8px;height:8px;border-radius:4px;background:#9aa3c7}.estado.on::before{background:#5fd38a}
+.edit-tit{display:flex;flex-direction:column;gap:8px}.edit-tit label{font-size:13px;color:#C9D1F0}
+.oculto{position:absolute;left:-9999px}
+header{padding-top:max(22px,env(safe-area-inset-top))}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--head);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
 <body>
-
-<header class="barra">
-  <button id="btnAtras" class="chico oculto">‹ Volver</button>
-  <h1 id="tituloBarra">🎵 Alabanzas MMM</h1>
-  <a href="musicos.html" class="chico" style="text-decoration:none;font-size:14px" title="Vista de músicos">🎸 Músicos</a>
-  <span class="punto" id="conexion" title="Verde: conectado · Rojo: sin internet (se guarda y se sube después)"></span>
-</header>
-
-<main>
-  <!-- ======= LISTA ======= -->
-  <section id="pantallaLista">
-    <div class="buscador" id="cajaBuscar">
-      <input id="buscar" type="search" placeholder="Buscar alabanza, hermano o letra…">
-    </div>
-    <div class="filtros" id="filtros">
-      <button data-f="hoy">⭐ Hoy</button>
-      <button data-f="cultos" class="activo">📅 Cultos</button>
-      <button data-f="mias">🙋 Lo que me toca</button>
-      <button data-f="hermanos">👥 Hermanos</button>
-      <button data-f="todas">🎵 Todas las alabanzas</button>
-    </div>
-    <div id="lista"></div>
-    <div style="text-align:center;margin-top:30px"><a href="#salir" class="tenue" style="font-size:13px">Cerrar sesión</a></div>
-    <button class="prim flotante" id="btnNueva">＋ Nueva alabanza</button>
-  </section>
-
-  <!-- ======= VER ======= -->
-  <section id="pantallaVer" class="oculto">
-    <div class="ver-cab">
-      <h2 id="verTitulo"></h2>
-      <div class="tenue" id="verSub"></div>
-      <div id="verProgramada"></div>
-      <div id="verTonos" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
-    </div>
-    <div class="herram">
-      <span class="tenue">Tono:</span>
-      <button class="chico" id="bajar">−½</button>
-      <span class="tonoactual" id="tonoActual"></span>
-      <button class="chico" id="subir">+½</button>
-      <button class="chico" id="notacion" title="Cambiar notación">Do/C</button>
-      <span style="flex:1"></span>
-      <button class="chico" id="letraMenos">A−</button>
-      <button class="chico" id="letraMas">A+</button>
-    </div>
-    <div class="tarjeta vista-acordes" id="vistaLetra"></div>
-    <div class="tenue" id="verNotas" style="margin-top:10px"></div>
-    <div class="acciones">
-      <button id="btnAlCulto">📅 Agregar a un culto</button>
-      <button id="btnEditar" class="prim">✏️ Editar</button>
-    </div>
-  </section>
-
-  <!-- ======= EDITOR ======= -->
-  <section id="pantallaEditor" class="oculto">
-    <label>Nombre de la alabanza *</label>
-    <input id="fTitulo" placeholder="Ej: Cuán grande es Él" autocomplete="off">
-    <div class="fila">
-      <div><label>Quién la canta</label><input id="fCantante" placeholder="Hno. / Hna." list="listaCantantes" autocomplete="off"></div>
-      <div style="flex:.5"><label>Tono</label><input id="fTono" placeholder="Ej: G o Sol" autocomplete="off"></div>
-    </div>
-    <datalist id="listaCantantes"></datalist>
-    <div id="cajaCultoEditor">
-      <div class="fila">
-        <div><label>¿Para qué culto? (opcional)</label><select id="fCulto"></select></div>
-        <div style="flex:.6"><label>Parte</label><select id="fTipo"><option value="adoracion">🙏 Adoración</option><option value="coros">🎉 Coros</option></select></div>
-      </div>
-    </div>
-    <label>Autor (opcional)</label>
-    <input id="fAutor" placeholder="Autor o ministerio" autocomplete="off">
-
-    <label>Letra con acordes</label>
-    <textarea id="textoLetra" spellcheck="false" placeholder="Verso 1:
-G              D
-Cuán grande es Él, mi Dios
-Em          C
-Lo alabaré por siempre
-
-Coro:
-G       D
-Santo, santo…"></textarea>
-    <div class="ayuda">
-      • Deja <b>una línea en blanco</b> entre cada parte: cada parte será una pantalla en la LED.<br>
-      • Pon los acordes <b>en la línea de arriba</b> de la letra, o dentro de corchetes: <code>[G]Cuán grande es [D]Él</code><br>
-      • Sirven <code>G D Em C7 F#m Bb/D</code> y también <code>Sol Re Mim Do</code>.<br>
-      • Puedes titular partes: <code>Verso 1:</code> <code>Coro:</code> <code>Puente:</code> o <code>[Coro]</code>.<br>
-      • Los acordes <b>no salen en la pantalla LED</b>, solo en la vista de músicos.
-    </div>
-    <label>Notas para los músicos (opcional)</label>
-    <input id="fNotas" placeholder="Ej: Coro 2 veces, final lento" autocomplete="off">
-
-    <label>Así se verá en la pantalla LED</label>
-    <div class="diap-prev" id="previa"></div>
-
-    <div class="acciones">
-      <button class="peligro oculto" id="btnBorrar">🗑 Borrar</button>
-      <button id="btnCancelar">Cancelar</button>
-      <button class="prim" id="btnGuardar">💾 Guardar</button>
-    </div>
-  </section>
-</main>
-
-<!-- ======= VENTANA: agregar alabanza a un culto ======= -->
-<div class="modal oculto" id="modalTurno">
-  <div class="hoja">
-    <h3 id="mtTitulo">Agregar a un culto</h3>
-    <div class="tenue" id="mtSub" style="font-size:14px"></div>
-    <div id="mtCajaCancion">
-      <label>Alabanza</label>
-      <input id="mtBuscar" type="search" placeholder="Buscar alabanza…">
-      <div id="elegirCancionLista"></div>
-    </div>
-    <div id="mtCajaCulto">
-      <label>¿En qué culto?</label>
-      <div id="mtCultos"></div>
-    </div>
-    <div class="fila">
-      <div><label>¿Quién la canta ese día?</label><input id="mtCantante" list="listaCantantes" placeholder="Hno. / Hna." autocomplete="off"></div>
-      <div style="flex:.45"><label>Tono</label><input id="mtTono" placeholder="Ej: G" autocomplete="off"></div>
-    </div>
-    <div class="tenue" id="mtTonoAyuda" style="font-size:12px;margin-top:4px"></div>
-    <label>¿En qué parte del culto va?</label>
-    <div class="tipos" id="mtTipos"><button data-tipo="adoracion">🙏 Adoración</button><button data-tipo="coros">🎉 Coros</button></div>
-    <div class="acciones">
-      <button id="mtCancelar">Cancelar</button>
-      <button class="prim" id="mtGuardar">✔ Agregar</button>
-    </div>
-  </div>
+<div class="app">
+  <header id="head"></header>
+  <main id="main"></main>
 </div>
+<nav><div>
+  <button id="t-alumnos" data-tab="alumnos"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 010 7M21 20c0-2.6-1.6-4.8-4-5.6"/></svg>Alumnos</button>
+  <button id="t-lista" data-tab="lista"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg>Pasar lista</button>
+  <button id="t-temas" data-tab="temas"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 21V5M9 8h6"/></svg>Temas</button>
+</div></nav>
+<div class="toast" id="toast"></div>
+<script>
+{
+/* ====== CONFIGURACIÓN DE FIREBASE ======
+   Pega aquí los datos de tu proyecto (Firebase › Configuración del proyecto › Tus apps › Web).
+   Si lo dejas vacío, la app funciona en modo local (solo en este celular). */
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-<!-- ======= VENTANA: poner a un hermano en un culto ======= -->
-<div class="modal oculto" id="modalPart">
-  <div class="hoja">
-    <h3 id="mpTitulo">Agregar hermano al culto</h3>
-    <div class="tenue" id="mpSub" style="font-size:14px"></div>
-    <label>Nombre del hermano</label>
-    <input id="mpNombre" list="listaCantantes" placeholder="Hno. / Hna." autocomplete="off">
-    <label>¿Qué hace ese día?</label>
-    <input id="mpRol" list="listaRoles" placeholder="Ej: Guitarra" autocomplete="off">
-    <datalist id="listaRoles"></datalist>
-    <div id="mpRolesRapidos" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
-    <div id="mpCajaCulto">
-      <label>¿En qué culto?</label>
-      <div id="mpCultos"></div>
-    </div>
-    <div class="acciones">
-      <button id="mpCancelar">Cancelar</button>
-      <button class="prim" id="mpGuardar">✔ Agregar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ======= VENTANA: nuevo culto ======= -->
-<div class="modal oculto" id="modalCulto">
-  <div class="hoja">
-    <h3 id="mcTitulo">Nuevo culto</h3>
-    <label>Fecha</label>
-    <input id="mcFecha" type="date">
-    <label>Nombre</label>
-    <input id="mcNombre" list="nombresCulto" placeholder="Ej: Noche de alabanza" autocomplete="off">
-    <label>¿Qué va primero?</label>
-    <div class="tipos" id="mcPrimero"><button data-tipo="adoracion">🙏 Adoración</button><button data-tipo="coros">🎉 Coros</button></div>
-    <datalist id="nombresCulto">
-      <option value="Noche de alabanza"><option value="Culto de alabanza"><option value="Culto dominical">
-      <option value="Culto de oración"><option value="Vigilia"><option value="Culto de jóvenes">
-    </datalist>
-    <div class="acciones">
-      <button class="peligro oculto" id="mcBorrar">🗑 Borrar culto</button>
-      <button id="mcCancelar">Cancelar</button>
-      <button class="prim" id="mcGuardar">✔ Guardar</button>
-    </div>
-  </div>
-</div>
-
-<script src="config.js"></script>
-<script src="comun.js"></script>
-<script type="module">
-import './nube.js';
-
-let canciones = [], estado = {}, prog = { cultos: [], turnos: [] }, filtro = 'cultos', verPasados = false;
-let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista', hermanoSel = null, ordenando = null;
-const $ = id => document.getElementById(id);
-
-function guardarLocal(k, v) { try { localStorage.setItem(k, v); } catch {} }
-function leerLocal(k) { try { return localStorage.getItem(k); } catch { return null; } }
-let miNombre = leerLocal('miNombre') || '';
-const esMio = nombre => !!miNombre && !!nombre && normalizar(nombre).includes(normalizar(miNombre));
-const inicial = n => escaparHTML(String(n).replace(/^(hn[oa]s?\.?|herman[oa]s?|pastor[a]?)\s+/i, '').charAt(0).toUpperCase() || '?');
-function actualizarNombres() { $('listaCantantes').innerHTML = nombresHermanos(canciones, prog).map(n => `<option value="${escaparHTML(n)}">`).join(''); }
-const cancionDe = id => canciones.find(c => c.id === id);
-
-function mostrar(p) {
-  pantalla = p;
-  for (const s of ['Lista', 'Ver', 'Editor']) $('pantalla' + s).classList.toggle('oculto', s.toLowerCase() !== p);
-  $('btnAtras').classList.toggle('oculto', p === 'lista');
-  $('tituloBarra').textContent = p === 'lista' ? '🎵 Alabanzas MMM' : p === 'ver' ? 'Alabanza' : (actual ? 'Editar alabanza' : 'Nueva alabanza');
-  window.scrollTo(0, 0);
-}
-$('btnAtras').onclick = () => {
-  if (pantalla === 'editor' && actual) return abrir(actual.id);
-  mostrar('lista'); pintarLista();
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBBadBw9ISyXhrArD9D5Kua1AZtKvHgT4c",
+  authDomain: "antioquia-9b5a7.firebaseapp.com",
+  projectId: "antioquia-9b5a7",
+  storageBucket: "antioquia-9b5a7.firebasestorage.app",
+  messagingSenderId: "215703881297",
+  appId: "1:215703881297:web:932bcc23831f1ffd1ada70"
 };
 
-// ---------- Lista ----------
-function filaCancion(c) {
-  const enCultos = prog.turnos.filter(t => t.cancionId === c.id).length;
-  return `<div class="tarjeta cancion" data-id="${c.id}">
-      <div class="tono">${escaparHTML(c.tono || '·')}</div>
-      <div class="info">
-        <div class="tit">${escaparHTML(c.titulo)}</div>
-        <div class="sub">${c.cantante ? '🎤 ' + escaparHTML(c.cantante) : '<span class="tenue">Sin cantante</span>'}
-          ${enCultos ? ' · <span class="encult">📅 ' + enCultos + ' culto' + (enCultos > 1 ? 's' : '') + '</span>' : ''}</div>
-      </div>
-      <span class="tenue">›</span>
-    </div>`;
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const CURSO = 'discipulado-2026';   // un nombre distinto crea otro curso aparte
+/* ====================================== */
+
+const KEY='doctrina-asistencia-v2';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const hoy=()=>new Date().toISOString().slice(0,10);
+const fmt=d=>{if(!d)return'';const [y,m,dd]=d.split('-');return `${+dd} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][m-1]}`};
+const AJ={titulo:'Curso de Discipulado',subtitulo:'Doctrina Bíblica 2026'};
+const TEMAS_BASE=['La Biblia, Palabra de Dios','Dios y la Trinidad','Jesucristo','El Espíritu Santo','El pecado y la salvación','La Gracia','La fe y el arrepentimiento','El bautismo','La Iglesia','La oración','El servicio','La segunda venida'];
+
+function ejemplo(){
+  const temas=TEMAS_BASE.map((n,i)=>({id:uid(),nombre:n,subs:[],orden:i}));
+  temas[0].subs=['¿Qué es la Biblia?','Antiguo y Nuevo Testamento','La inspiración divina','Cómo leer y estudiar la Biblia'];
+  temas[1].subs=['Los atributos de Dios','El Padre, el Hijo y el Espíritu Santo'];
+  const alumnos=['María Rojas','José Pérez','Ana López','David Castro','Ruth Sánchez'].map(n=>({id:uid(),nombre:n,recuperados:[]}));
+  const faltas=[[5],[],[2,4,5],[3],[]];
+  const fechas=['2026-10-03','2026-10-10','2026-10-17','2026-10-24','2026-11-07','2026-11-14','2026-11-21'];
+  const profes=['Hno. Luis','Hna. Carmen','Hno. Luis','Hna. Rebeca','Hna. Carmen','Hno. Luis','Hna. Rebeca'];
+  const sesiones=fechas.map((f,i)=>({id:temas[i].id,temaId:temas[i].id,fecha:f,profesor:profes[i],asis:Object.fromEntries(alumnos.map((a,j)=>[a.id,!faltas[j].includes(i)]))}));
+  alumnos[3].recuperados=[{temaId:temas[3].id,fecha:'2026-10-31',profesor:'Hna. Carmen'}];
+  return {ajustes:{...AJ},temas,alumnos,sesiones,ejemplo:true};
 }
-function tarjetaCulto(cu, soloMios) {
-  let ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
-  const numero = new Map(ts.map((t, i) => [t.id, i + 1]));   // número general del culto (1, 2, 3…)
-  if (soloMios) ts = ts.filter(t => esMio(t.cantante));
-  const esHoy = cu.fecha === hoyISO(), ordenar = ordenando === cu.id && !soloMios;
-  const fila = (t, pos, total) => {
-    const c = cancionDe(t.cancionId), tono = tonoTurno(t, c);
-    const botones = soloMios ? '' : ordenar
-      ? `<button class="mini" data-mover="${t.id}" data-dir="-1" ${pos === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button><button class="mini" data-mover="${t.id}" data-dir="1" ${pos === total - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>`
-      : `<button class="mini" data-editar-turno="${t.id}" title="Cambiar quién canta, el tono o la parte">✏️</button><button class="mini" data-quitar-turno="${t.id}" title="Quitar de este culto">✖</button>`;
-    return `<div class="turno ${esMio(t.cantante) ? 'mio' : ''} ${ordenar ? 'ordenando' : ''}" ${ordenar ? '' : `data-id="${c.id}"`}>
-      <span class="n">${numero.get(t.id)}</span>
-      <div class="info"><div class="tit">${escaparHTML(c.titulo)}</div>
-        <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${tono ? ' · <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}${t.tono && c.tono && t.tono !== c.tono ? ' <span class="tenue">(original ' + escaparHTML(c.tono) + ')</span>' : ''}</div></div>
-      ${botones}
-    </div>`;
-  };
-  const cuerpo = ts.length ? partesDe(ts).map(p => `<div class="parte ${p.tipo || 'sin'}">${nombreTipo(p.tipo)} <span>${p.turnos.length}</span></div>` +
-      p.turnos.map((t, k) => fila(t, k, p.turnos.length)).join('')).join('')
-    : `<div class="turno tenue" style="cursor:default">Todavía no hay alabanzas en este culto.</div>`;
-  return `<div class="tarjeta culto ${esHoy ? 'hoy' : ''}">
-    <div class="culto-cab">
-      <div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)} · ${turnosDe(prog, cu.id).length} alabanza(s)</small></div>
-      ${soloMios ? '' : `${ts.length > 1 ? `<button class="mini ${ordenar ? 'prim' : ''}" data-ordenar="${cu.id}" title="Cambiar el orden">${ordenar ? '✔ Listo' : '↕ Ordenar'}</button>` : ''}<button class="mini" data-editar-culto="${cu.id}" title="Cambiar fecha, nombre o qué va primero">✏️</button>`}
-    </div>
-    ${ordenar ? `<div class="ayuda-orden">Usa ▲▼ para cambiar el orden dentro de cada parte. Para pasar una alabanza a Adoración o Coros, toca «✔ Listo» y luego ✏️.</div>` : ''}
-    ${cuerpo}
-    ${ordenar ? '' : equipoHTML(cu, soloMios)}
-    ${soloMios || ordenar ? '' : `<div class="culto-pie"><button data-agregar-a="${cu.id}">＋ Alabanza</button><button data-agregar-hermano="${cu.id}">＋ Hermano</button></div>`}
-  </div>`;
+
+let tab='alumnos',filtro='todos',detalle=null,lista=null,recup=null,abierto=null,editTit=false;
+const draft={};let listo=false;
+/* ---------- capa de datos: nube (Firestore) o local ---------- */
+let db={ajustes:{...AJ},temas:[],alumnos:[],sesiones:[]},modo='local',estado='';
+let fs=null,ref=null;
+const nube=!!(firebaseConfig.projectId&&window.firebase);
+if(nube){
+  try{
+    firebase.initializeApp(firebaseConfig);
+    fs=firebase.firestore();
+    try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+    ref=fs.collection('doctrina').doc(CURSO);
+    modo='nube';estado='Conectando…';
+    const ok=()=>{estado=navigator.onLine?'En la nube':'Sin internet · se sincroniza al volver'};
+    const err=e=>{estado='Error de conexión: '+(e.code||e.message);render()};
+    ref.onSnapshot(d=>{db.ajustes={...AJ,...(d.data()||{})};ok();render()},err);
+    ref.collection('temas').orderBy('orden').onSnapshot(q=>{db.temas=q.docs.map(d=>({subs:[],...d.data(),id:d.id}));ok();render()},err);
+    ref.collection('alumnos').orderBy('nombre').onSnapshot(q=>{db.alumnos=q.docs.map(d=>({recuperados:[],...d.data(),id:d.id}));ok();render()},err);
+    ref.collection('sesiones').onSnapshot(q=>{db.sesiones=q.docs.map(d=>({asis:{},...d.data(),id:d.id}));ok();render()},err);
+    addEventListener('online',()=>{ok();render()});addEventListener('offline',()=>{ok();render()});
+  }catch(e){modo='local';console.error(e)}
 }
-// quién sirve en el culto: los que tocan/dirigen y los que cantan alguna alabanza
-function equipoHTML(cu, soloMios) {
-  let ps = participacionesDe(prog, cu.id).slice().sort((a, b) => ROLES.indexOf(a.rol) - ROLES.indexOf(b.rol));
-  if (soloMios) ps = ps.filter(x => esMio(x.nombre));
-  const cantan = nombresHermanos([], { turnos: turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId)) })
-    .filter(n => !ps.some(x => mismoNombre(x.nombre, n) && /canta|dirige|coros/i.test(x.rol)));
-  if (!ps.length && (soloMios || !cantan.length)) return '';
-  return `<div class="equipo"><span class="lbl">👥 Equipo de este culto</span>
-    ${ps.map(x => `<span class="chip ${esMio(x.nombre) ? 'mio' : ''}"><b data-hermano="${escaparHTML(x.nombre)}">${escaparHTML(x.nombre)}</b><span>${escaparHTML(x.rol || '')}</span>${soloMios ? '' : `<button data-quitar-part="${x.id}" title="Quitar">✖</button>`}</span>`).join('')}
-    ${soloMios ? '' : cantan.map(n => `<span class="chip ${esMio(n) ? 'mio' : ''}" style="padding-right:11px"><b data-hermano="${escaparHTML(n)}">${escaparHTML(n)}</b><span>Canta</span></span>`).join('')}
-  </div>`;
+if(modo==='local'){
+  try{db=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!db||!db.temas)db=ejemplo();
+  db.ajustes={...AJ,...(db.ajustes||{})};
+  estado='Modo local · solo en este equipo';
 }
-function pintarHermanos(cont) {
-  const nombres = nombresHermanos(canciones, prog);
-  const hoy = hoyISO();
-  const diasDe = n => prog.cultos.filter(cu => cu.fecha >= hoy && (participacionesDe(prog, cu.id).some(x => mismoNombre(x.nombre, n)) || turnosDe(prog, cu.id).some(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId))))
-    .sort((a, b) => a.fecha.localeCompare(b.fecha));
-  if (hermanoSel) {
-    const n = hermanoSel, dias = diasDe(n);
-    const suyas = canciones.filter(c => mismoNombre(c.cantante, n) || prog.turnos.some(t => t.cancionId === c.id && mismoNombre(t.cantante, n)))
-      .sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-    cont.innerHTML = `<button class="chico" id="volverHermanos" style="margin-bottom:10px">‹ Todos los hermanos</button>
-      <div class="tarjeta hermano" style="cursor:default"><div class="avatar">${inicial(n)}</div><div class="info"><b style="font-size:18px">${escaparHTML(n)}</b>
-        <div class="sub">${dias.length} día(s) próximos · ${suyas.length} alabanza(s)</div></div></div>
-      <div class="acciones" style="margin-top:0"><button class="prim" id="ponerEnCulto">📅 Poner en un culto</button></div>
-      <div class="seccion-t">📅 Próximos días que sirve</div>
-      ${dias.map(cu => {
-        const roles = participacionesDe(prog, cu.id).filter(x => mismoNombre(x.nombre, n));
-        const ts = turnosDe(prog, cu.id).filter(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId));
-        return `<div class="tarjeta culto"><div class="culto-cab"><div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)}</small></div></div>
-          ${roles.length ? `<div class="equipo">${roles.map(x => `<span class="chip"><b>${escaparHTML(x.rol || 'Participa')}</b><button data-quitar-part="${x.id}" title="Quitar">✖</button></span>`).join('')}</div>` : ''}
-          ${ts.map(t => { const c = cancionDe(t.cancionId), tono = tonoTurno(t, c); return `<div class="turno" data-id="${c.id}"><span class="n">🎤</span><div class="info"><div class="tit">${escaparHTML(c.titulo)}</div><div class="sub">${tono ? 'Tono <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}</div></div></div>`; }).join('')}
-        </div>`;
-      }).join('') || '<div class="tarjeta tenue">No tiene días programados.</div>'}
-      <div class="seccion-t">🎵 Alabanzas que canta</div>
-      ${suyas.map(c => {
-        const ultimo = prog.turnos.filter(t => t.cancionId === c.id && mismoNombre(t.cantante, n) && t.tono).sort((a, b) => String(b.actualizada).localeCompare(String(a.actualizada)))[0];
-        const tono = (ultimo && ultimo.tono) || (mismoNombre(c.cantante, n) ? c.tono : '');
-        return `<div class="tarjeta cancion" data-id="${c.id}"><div class="tono">${escaparHTML(tono || '·')}</div><div class="info"><div class="tit">${escaparHTML(c.titulo)}</div><div class="sub">${tono && c.tono && tono !== c.tono ? 'Su tono ' + escaparHTML(tono) + ' · original ' + escaparHTML(c.tono) : 'Tono ' + escaparHTML(tono || c.tono || '—')}</div></div><span class="tenue">›</span></div>`;
-      }).join('') || '<div class="tenue">Todavía no tiene alabanzas.</div>'}`;
-    $('volverHermanos').onclick = () => { hermanoSel = null; pintarLista(); };
-    $('ponerEnCulto').onclick = () => abrirModalPart({ nombre: n });
+const saveLocal=()=>{try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}};
+const fallo=e=>toast('No se pudo guardar: '+(e.code||e.message));
+const FV=()=>firebase.firestore.FieldValue;
+
+const S={
+  ajustes(a){if(ref)return ref.set(a,{merge:true}).catch(fallo);db.ajustes={...db.ajustes,...a};saveLocal();render()},
+  addTema(nombre){const orden=Date.now();if(ref)return ref.collection('temas').add({nombre,subs:[],orden}).catch(fallo);db.temas.push({id:uid(),nombre,subs:[],orden});saveLocal();render()},
+  addSub(tid,s){if(ref)return ref.collection('temas').doc(tid).update({subs:FV().arrayUnion(s)}).catch(fallo);const t=tema(tid);if(!t.subs.includes(s))t.subs.push(s);saveLocal();render()},
+  delSub(tid,s){if(ref)return ref.collection('temas').doc(tid).update({subs:FV().arrayRemove(s)}).catch(fallo);const t=tema(tid);t.subs=t.subs.filter(x=>x!==s);saveLocal();render()},
+  addAlumno(nombre){if(ref)return ref.collection('alumnos').add({nombre,recuperados:[]}).catch(fallo);db.alumnos.push({id:uid(),nombre,recuperados:[]});delete db.ejemplo;saveLocal();render()},
+  delAlumno(id){if(ref)return ref.collection('alumnos').doc(id).delete().catch(fallo);db.alumnos=db.alumnos.filter(a=>a.id!==id);saveLocal();render()},
+  sesion(s){const data={temaId:s.temaId,fecha:s.fecha,profesor:s.profesor,asis:s.asis};
+    if(ref)return ref.collection('sesiones').doc(s.temaId).set(data,{merge:true}).catch(fallo);
+    const ex=db.sesiones.find(x=>x.temaId===s.temaId);if(ex){Object.assign(ex,{...data,asis:{...ex.asis,...s.asis}})}else db.sesiones.push({id:s.temaId,...data});saveLocal();render()},
+  recup(aid,r){if(ref)return ref.collection('alumnos').doc(aid).update({recuperados:FV().arrayUnion(r)}).catch(fallo);db.alumnos.find(a=>a.id===aid).recuperados.push(r);saveLocal();render()},
+  temasBase(){if(ref){const b=fs.batch();TEMAS_BASE.forEach((n,i)=>b.set(ref.collection('temas').doc(),{nombre:n,subs:[],orden:i}));return b.commit().catch(fallo)}
+    TEMAS_BASE.forEach((n,i)=>db.temas.push({id:uid(),nombre:n,subs:[],orden:i}));saveLocal();render()},
+  limpiar(){db={ajustes:db.ajustes,temas:db.temas,alumnos:[],sesiones:[]};saveLocal();render()}
+};
+
+/* ---------- cálculos ---------- */
+const tema=id=>db.temas.find(t=>t.id===id);
+const nTema=id=>db.temas.indexOf(tema(id))+1;
+const ini=n=>String(n).split(/\s+/).map(p=>p[0]||'').slice(0,2).join('').toUpperCase();
+const dados=()=>db.sesiones.filter(s=>tema(s.temaId)).length;
+const profesores=()=>[...new Set([...db.sesiones.map(s=>s.profesor),...db.alumnos.flatMap(a=>a.recuperados||[]).map(r=>r.profesor)].filter(Boolean))];
+const porQuien=(f,p)=>[fmt(f),p?'Prof. '+esc(p):''].filter(Boolean).join(' · ');
+function stats(a){
+  const ses=db.sesiones.filter(s=>tema(s.temaId)&&a.id in (s.asis||{}));
+  const pres=ses.filter(s=>s.asis[a.id]).length;
+  const rec=(a.recuperados||[]).map(r=>r.temaId);
+  const pend=ses.filter(s=>!s.asis[a.id]&&!rec.includes(s.temaId)).map(s=>s.temaId);
+  const comp=new Set([...ses.filter(s=>s.asis[a.id]).map(s=>s.temaId),...rec.filter(tema)]);
+  return {total:ses.length,pres,faltas:ses.length-pres,pct:ses.length?Math.round(pres/ses.length*100):0,pend,comp:comp.size};
+}
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>el.classList.remove('show'),2200)}
+
+/* ---------- vistas ---------- */
+function header(){
+  const H=document.getElementById('head');
+  const st=`<span class="estado ${modo==='nube'&&estado==='En la nube'?'on':''}">${esc(estado)}</span>`;
+  if(detalle){
+    const a=db.alumnos.find(x=>x.id===detalle);if(!a){detalle=null;return header()}
+    const s=stats(a);
+    H.innerHTML=`<button class="back" data-act="volver" aria-label="Volver">‹</button>
+    <div class="row"><div class="av" style="width:56px;height:56px;border-radius:28px;font-size:18px">${esc(ini(a.nombre))}</div>
+    <div class="grow"><h1 style="font-size:24px">${esc(a.nombre)}</h1><small>${s.comp} de ${db.temas.length} temas completados</small></div></div>
+    <div class="stats"><div class="stat"><b>${s.pct}%</b><span>Asistencia</span></div><div class="stat"><b>${s.pres}</b><span>Presentes</span></div><div class="stat"><b style="color:#FFB98A">${s.faltas}</b><span>Faltas</span></div></div>`;
     return;
   }
-  const q = normalizar($('buscar').value);
-  const l = q ? nombres.filter(n => normalizar(n).includes(q)) : nombres;
-  cont.innerHTML = (l.length ? l.map(n => {
-    const d = diasDe(n), prox = d[0];
-    const roles = [...new Set(prog.participaciones.filter(x => mismoNombre(x.nombre, n)).map(x => x.rol).filter(Boolean))];
-    return `<div class="tarjeta hermano" data-hermano="${escaparHTML(n)}"><div class="avatar">${inicial(n)}</div>
-      <div class="info"><b>${escaparHTML(n)}</b><div class="sub">${roles.length ? escaparHTML(roles.join(', ')) + ' · ' : ''}${prox ? '📅 ' + escaparHTML(fechaBonita(prox.fecha, true)) + (d.length > 1 ? ' y ' + (d.length - 1) + ' más' : '') : 'Sin días próximos'}</div></div><span class="tenue">›</span></div>`;
-  }).join('') : '<div class="vacio">' + (q ? 'No hay nadie con ese nombre.' : 'Todavía no hay hermanos. Aparecen al poner quién canta una alabanza o al agregarlos a un culto.') + '</div>')
-    + `<div class="acciones"><button id="nuevoHermano">＋ Poner a un hermano en un culto</button></div>`;
-  $('nuevoHermano').onclick = () => abrirModalPart({ nombre: $('buscar').value.trim() });
+  const al=db.alumnos.map(stats).filter(s=>s.total);
+  const prom=al.length?Math.round(al.reduce((t,s)=>t+s.pct,0)/al.length):0;
+  const tit=editTit?`<form id="f-tit" class="edit-tit"><label for="i-tit">Nombre del curso</label><input id="i-tit" value="${esc(db.ajustes.titulo)}"><label for="i-sub">Debajo</label><input id="i-sub" value="${esc(db.ajustes.subtitulo)}"><div class="row"><button class="btn" style="flex:1">Guardar</button><button type="button" class="btn ghost" style="color:#fff;border-color:#4a5894" data-act="cancelar-tit">Cancelar</button></div></form>`
+  :`<div class="row" style="align-items:flex-start"><div class="grow"><h1>${esc(db.ajustes.titulo)}</h1><small style="font-size:15px">${esc(db.ajustes.subtitulo)}</small></div><button class="back" style="font-size:16px" data-act="editar-tit" aria-label="Cambiar el nombre del curso"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg></button></div>`;
+  H.innerHTML=`${tit}${st}
+  <div class="stats"><div class="stat"><b>${db.alumnos.length}</b><span>Alumnos</span></div><div class="stat"><b>${prom}%</b><span>Asistencia</span></div><div class="stat"><b>${dados()}/${db.temas.length}</b><span>Temas dados</span></div></div>`;
 }
 
-// ---------- HOY: lo que se canta y se toca hoy ----------
-let modoHoy = leerLocal('modoHoy') === 'acordes' ? 'acordes' : 'letra';   // letra = sin partitura · acordes = con partitura
-let tamHoy = +leerLocal('tamHoy') || 20, latinoHoy, hoyOtro = null;
-function letraLimpiaHTML(texto) {
-  return analizarLetra(texto).map(sec => {
-    const lineas = sec.lineas.map(l => String(l.letra || '').replace(/\s{2,}/g, ' ').trim()).filter(Boolean);
-    if (!lineas.length) return '';
-    return `<div class="estrofa">${sec.etiqueta ? `<div class="etq">${escaparHTML(sec.etiqueta)}</div>` : ''}${lineas.map(escaparHTML).join('<br>')}</div>`;
-  }).join('') || '<span class="tenue">Sin letra</span>';
-}
-function bloqueHoy(cu, conAc, titulo) {
-  const ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
-  const num = new Map(ts.map((t, i) => [t.id, i + 1]));
-  const ps = participacionesDe(prog, cu.id);
-  const equipo = ps.map(x => `<span class="chip ${esMio(x.nombre) ? 'mio' : ''}" style="padding-right:11px"><b>${escaparHTML(x.nombre)}</b><span>${escaparHTML(x.rol || '')}</span></span>`).join('');
-  let h = `<div class="tarjeta hoy-cab">
-    <small class="tenue">${titulo}</small>
-    <b>${escaparHTML(fechaBonita(cu.fecha))}</b>
-    <span class="tenue">${escaparHTML(cu.nombre)} · ${ts.length} alabanza(s)</span>
-    ${equipo ? `<div class="eq">${equipo}</div>` : ''}
-    ${ts.length > 1 ? `<div class="hoy-indice">${ts.map(t => { const c = cancionDe(t.cancionId); return `<a href="#" data-ir="${t.id}" class="${esMio(t.cantante) ? 'mio' : ''}"><span class="n">${num.get(t.id)}</span><span>${escaparHTML(c.titulo)}${t.cantante ? ' — ' + escaparHTML(t.cantante) : ''}</span></a>`; }).join('')}</div>` : ''}
-  </div>`;
-  if (!ts.length) return h + '<div class="tarjeta tenue">Todavía no hay alabanzas en este culto.</div>';
-  for (const p of partesDe(ts)) {
-    h += `<div class="hoy-parte ${p.tipo || ''}">${nombreTipo(p.tipo)}</div>`;
-    for (const t of p.turnos) {
-      const c = cancionDe(t.cancionId), tono = tonoTurno(t, c);
-      const pasos = semitonos(c.tono, tono) || 0;
-      const tonoVer = conAc && tono ? (c.tono ? transponerAcorde(c.tono, pasos, latinoHoy) : tono) : tono;
-      const cuerpo = conAc
-        ? `<div class="vista-acordes">${analizarLetra(c.letra).map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latinoHoy)}</div>`).join('') || '<span class="tenue">Sin letra</span>'}</div>${c.notas ? `<div class="notas">📝 ${escaparHTML(c.notas)}</div>` : ''}`
-        : `<div class="letra-limpia">${letraLimpiaHTML(c.letra)}</div>`;
-      h += `<div class="tarjeta hoy-cancion ${esMio(t.cantante) ? 'mio' : ''}" id="hoy-${t.id}">
-        <div class="cab"><span class="n">${num.get(t.id)}</span>
-          <div class="info"><div class="tit" data-id="${c.id}">${escaparHTML(c.titulo)}</div>
-            <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${c.autor ? ' · ' + escaparHTML(c.autor) : ''}</div></div>
-          ${tonoVer ? `<span class="tonoG">${escaparHTML(tonoVer)}</span>` : ''}
-        </div>
-        <div class="cuerpo" style="font-size:${conAc ? Math.max(12, tamHoy - 4) : tamHoy}px">${cuerpo}</div>
-      </div>`;
-    }
-  }
-  return h;
-}
-function pintarHoy(cont) {
-  const o = cultosOrdenados(prog), hoy = hoyISO();
-  const deHoy = o.proximos.filter(cu => cu.fecha === hoy);
-  const sig = o.proximos.find(cu => cu.fecha > hoy);
-  const conAc = modoHoy === 'acordes';
-  let h = `<div class="modo-hoy">
-      <button data-modo="letra" class="${conAc ? '' : 'sel'}">🎤 Sin partitura<small>Solo la letra · para los que cantan</small></button>
-      <button data-modo="acordes" class="${conAc ? 'sel' : ''}">🎹 Con partitura<small>Letra con acordes · para los músicos</small></button>
-    </div>
-    <div class="herram hoy-herr">
-      ${conAc ? `<button class="chico" data-notacion="1">${latinoHoy === undefined ? 'Do/C' : latinoHoy ? 'Do' : 'C'}</button>` : ''}
-      <span style="flex:1"></span>
-      <button class="chico" data-tam="-2">A−</button><button class="chico" data-tam="2">A+</button>
-    </div>`;
-  if (deHoy.length) h += deHoy.map(cu => bloqueHoy(cu, conAc, '⭐ HOY')).join('');
-  else if (hoyOtro && sig && hoyOtro === sig.id) h += `<div class="tenue" style="margin-bottom:8px">Hoy no hay culto. Este es el próximo, para ensayar:</div>` + bloqueHoy(sig, conAc, '📅 PRÓXIMO CULTO');
-  else h += `<div class="vacio">Hoy no hay culto programado.${sig ? `<br>El próximo es <b>${escaparHTML(fechaBonita(sig.fecha))}</b> · ${escaparHTML(sig.nombre)}<br><br><button class="prim" data-ver-proximo="${sig.id}">Ver el próximo para ensayar</button>` : ''}</div>`;
-  cont.innerHTML = h;
-}
-function clicHoy(e) {
-  const b = e.target.closest('[data-modo],[data-tam],[data-notacion],[data-ver-proximo],[data-ir]');
-  if (!b) return false;
-  e.preventDefault();
-  if (b.dataset.modo) { modoHoy = b.dataset.modo; guardarLocal('modoHoy', modoHoy); }
-  else if (b.dataset.tam) { tamHoy = Math.min(40, Math.max(12, tamHoy + +b.dataset.tam)); guardarLocal('tamHoy', tamHoy); }
-  else if (b.dataset.notacion) latinoHoy = latinoHoy === undefined ? true : latinoHoy ? false : undefined;
-  else if (b.dataset.verProximo) hoyOtro = b.dataset.verProximo;
-  else if (b.dataset.ir) { const el = $('hoy-' + b.dataset.ir); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return true; }
-  pintarLista();
-  return true;
+function vAlumnos(){
+  let al=db.alumnos.map(a=>({a,s:stats(a)}));
+  if(filtro==='pend')al=al.filter(x=>x.s.pend.length);
+  if(filtro==='faltas')al=al.filter(x=>x.s.faltas>=3);
+  const chips=[['todos','Todos'],['pend','Con temas pendientes'],['faltas','3+ faltas']].map(([k,t])=>`<button class="chip ${filtro===k?'on':''}" data-filtro="${k}">${t}</button>`).join('');
+  const N=db.temas.length||1;
+  const cards=al.map(({a,s})=>{
+    const falta=s.pend.length?`Le falta: ${s.pend.length===1?'Tema '+nTema(s.pend[0])+' · '+esc(tema(s.pend[0]).nombre):'Temas '+s.pend.map(nTema).join(', ')}`:'';
+    const tag=s.faltas===0?'<span class="tag ok">0 faltas</span>':`<span class="tag ${s.faltas>=3?'hot':''}">${s.faltas} falta${s.faltas>1?'s':''}</span>`;
+    return `<button class="card" data-alumno="${esc(a.id)}"><div class="row"><div class="av">${esc(ini(a.nombre))}</div>
+    <div class="grow"><span class="name">${esc(a.nombre)}</span>${falta?`<span class="sub">${falta}</span>`:`<span class="sub ok">${s.total?'Al día con todos los temas':'Aún sin clases'}</span>`}</div>${tag}</div>
+    <div class="row"><div class="bar"><i style="width:${s.comp/N*100}%"></i></div><span class="num">${s.comp}/${db.temas.length} temas · ${s.pct}%</span></div></button>`}).join('');
+  return `<div class="chips">${chips}</div>
+  <form class="form" id="f-alumno"><label for="n-alumno" class="oculto">Nombre del alumno</label><input id="n-alumno" placeholder="Nombre del nuevo alumno" autocomplete="off"><button class="btn">Añadir</button></form>
+  ${cards||'<div class="empty">No hay alumnos aquí todavía.</div>'}
+  ${modo==='local'&&db.ejemplo?'<p class="note">Datos de ejemplo. <button class="btn ghost sm" style="background:none;color:var(--acc)" data-act="limpiar">Empezar en blanco</button></p>':''}`;
 }
 
-function pintarLista() {
-  const q = normalizar($('buscar').value);
-  const cont = $('lista');
-  $('cajaBuscar').classList.toggle('oculto', !(filtro === 'todas' || (filtro === 'hermanos' && !hermanoSel)));
-  $('buscar').placeholder = filtro === 'hermanos' ? 'Buscar hermano por nombre…' : 'Buscar alabanza, hermano o letra…';
-  actualizarNombres();
-  if (filtro === 'hermanos') return pintarHermanos(cont);
-  if (filtro === 'hoy') return pintarHoy(cont);
-  if (filtro === 'cultos') {
-    const o = cultosOrdenados(prog);
-    let h = o.proximos.length ? o.proximos.map(c => tarjetaCulto(c)).join('') : '<div class="vacio">No hay cultos programados.<br>Toca “＋ Nuevo culto” para crear uno.</div>';
-    h += `<div class="acciones" style="margin-top:4px"><button id="btnNuevoCulto">＋ Nuevo culto</button></div>`;
-    if (o.pasados.length) {
-      h += `<div class="seccion-t" style="cursor:pointer" id="togglePasados">${verPasados ? '▾' : '▸'} Cultos anteriores (${o.pasados.length})</div>`;
-      if (verPasados) h += o.pasados.map(c => tarjetaCulto(c)).join('');
-    }
-    cont.innerHTML = h;
-    $('btnNuevoCulto').onclick = () => abrirModalCulto(null);
-    if ($('togglePasados')) $('togglePasados').onclick = () => { verPasados = !verPasados; pintarLista(); };
-  } else if (filtro === 'mias') {
-    if (!miNombre) { cont.innerHTML = `<div class="vacio">Escribe tu nombre para ver qué días te toca cantar.<br><br><button class="prim" id="ponerNombre">🙋 Escribir mi nombre</button></div>`; $('ponerNombre').onclick = pedirNombre; return; }
-    const o = cultosOrdenados(prog);
-    const conMios = o.proximos.filter(cu => turnosDe(prog, cu.id).some(t => esMio(t.cantante) && cancionDe(t.cancionId)) || participacionesDe(prog, cu.id).some(x => esMio(x.nombre)));
-    const mias = canciones.filter(c => esMio(c.cantante)).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-    cont.innerHTML = `<div class="tenue" style="margin-bottom:10px">Hola <b>${escaparHTML(miNombre)}</b> · <a href="#" id="cambiarNombre">no soy yo</a></div>
-      <div class="seccion-t">📅 Días que me toca servir</div>
-      ${conMios.length ? conMios.map(c => tarjetaCulto(c, true)).join('') : '<div class="tarjeta tenue" style="margin-bottom:10px">No estás en los próximos cultos.</div>'}
-      <div class="seccion-t">🎵 Mis alabanzas (${mias.length})</div>
-      ${mias.map(filaCancion).join('') || '<div class="tenue">Todavía no has subido alabanzas.</div>'}`;
-    $('cambiarNombre').onclick = e => { e.preventDefault(); pedirNombre(); };
-  } else {
-    let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-    if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante + ' ' + c.autor + ' ' + c.letra).includes(q));
-    cont.innerHTML = l.length ? l.map(filaCancion).join('') : '<div class="vacio">No hay alabanzas todavía.<br>Toca “＋ Nueva alabanza”.</div>';
-  }
+function vDetalle(){
+  const a=db.alumnos.find(x=>x.id===detalle),s=stats(a),rec=a.recuperados||[];
+  const sesPor=Object.fromEntries(db.sesiones.map(x=>[x.temaId,x]));
+  let proximo=true;
+  const dl=`<datalist id="dl-prof">${profesores().map(p=>`<option value="${esc(p)}">`).join('')}</datalist>`;
+  const items=db.temas.map((t,i)=>{
+    const ses=sesPor[t.id],r=rec.find(x=>x.temaId===t.id);let dot,txt,cls='',extra='',form='';
+    if(ses&&a.id in (ses.asis||{})){
+      if(ses.asis[a.id]){dot='<div class="dot ok">✓</div>';txt=`Completado · ${porQuien(ses.fecha,ses.profesor)}`}
+      else if(r){dot='<div class="dot ok">✓</div>';txt=`Recuperado${r.fecha||r.profesor?' · '+porQuien(r.fecha,r.profesor):''}`}
+      else{dot='<div class="dot no">✕</div>';txt=`Faltó el ${fmt(ses.fecha)} · pendiente`;cls='pend';
+        if(recup===t.id)form=`<form class="li pend" id="f-recup" style="flex-direction:column;align-items:stretch;gap:8px"><label for="r-prof" class="sub">¿Quién le dio la clase de recuperación?</label><input id="r-prof" list="dl-prof" placeholder="Ej. Hna. Carmen" autocomplete="off"><input type="date" id="r-fecha" value="${hoy()}" aria-label="Fecha de recuperación"><div class="row"><button class="btn" style="flex:1">Guardar</button><button type="button" class="btn ghost" data-act="cancelar">Cancelar</button></div></form>`;
+        else extra=`<button class="btn sm" data-recuperar="${esc(t.id)}">Recuperar</button>`}
+    }else if(ses){dot='<div class="dot later"></div>';txt='Dado antes de que se inscribiera'}
+    else if(proximo){proximo=false;dot='<div class="dot next"></div>';txt='Próxima clase'}
+    else{dot='<div class="dot later"></div>';txt='Por venir'}
+    return `<div class="li ${cls}">${dot}<div class="grow"><span style="font-size:14px;font-weight:${cls?600:500}">${i+1} · ${esc(t.nombre)}</span><span class="sub" style="font-size:12px;${cls?'color:var(--bad)':''}">${txt}</span></div>${extra}</div>${form}`}).join('')+dl;
+  const alerta=s.pend.length?`<div class="alert"><b>Tiene ${s.pend.length} tema${s.pend.length>1?'s':''} por recuperar</b>${s.pend.map(id=>'Tema '+nTema(id)+' · '+esc(tema(id).nombre)).join('<br>')}</div>`:'';
+  return `${alerta}<div class="row" style="justify-content:space-between"><h2>Temas del curso</h2><span class="num">${s.comp} de ${db.temas.length}</span></div>
+  <div class="bar" style="flex:none"><i style="width:${s.comp/(db.temas.length||1)*100}%"></i></div><div class="list">${items}</div>
+  <button class="btn ghost" data-borrar="${esc(a.id)}">Quitar alumno</button>`;
 }
-$('lista').onclick = async e => {
-  if (filtro === 'hoy' && clicHoy(e)) return;
-  const b = e.target.closest('button');
-  if (b && b.dataset.agregarA) return abrirModalTurno({ cultoId: b.dataset.agregarA });
-  if (b && b.dataset.editarCulto) return abrirModalCulto(prog.cultos.find(c => c.id === b.dataset.editarCulto));
-  if (b && b.dataset.ordenar) { ordenando = ordenando === b.dataset.ordenar ? null : b.dataset.ordenar; return pintarLista(); }
-  if (b && b.dataset.mover) {
-    const t = prog.turnos.find(x => x.id === b.dataset.mover); if (!t) return;
-    const cambios = moverTurno(turnosDe(prog, t.cultoId).filter(x => cancionDe(x.cancionId)), t.id, +b.dataset.dir);
-    if (!cambios.length) return;
-    try {
-      await Promise.all(cambios.map(x => API.guardarTurno(x)));
-      prog = await API.programa(); pintarLista();
-    } catch (e2) { aviso(e2.message, true); }
-    return;
-  }
-  if (b && b.dataset.agregarHermano) return abrirModalPart({ cultoId: b.dataset.agregarHermano });
-  if (b && b.dataset.editarTurno) { const t = prog.turnos.find(x => x.id === b.dataset.editarTurno); return t && abrirModalTurno({ turno: t }); }
-  if (b && b.dataset.quitarPart) {
-    const x = prog.participaciones.find(y => y.id === b.dataset.quitarPart);
-    if (x && confirm(`¿Quitar a ${x.nombre} (${x.rol || 'participa'}) de este culto?`)) {
-      try { await API.borrarParticipacion(x.id); prog = await API.programa(); pintarLista(); aviso('Quitado del culto'); } catch (e2) { aviso(e2.message, true); }
-    }
-    return;
-  }
-  const h = e.target.closest('[data-hermano]');
-  if (h) { filtro = 'hermanos'; hermanoSel = h.dataset.hermano; $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x.dataset.f === 'hermanos')); window.scrollTo(0, 0); return pintarLista(); }
-  if (b && b.dataset.quitarTurno) {
-    const t = prog.turnos.find(x => x.id === b.dataset.quitarTurno), c = t && cancionDe(t.cancionId);
-    if (t && confirm(`¿Quitar “${c ? c.titulo : ''}” de este culto?\n(La alabanza no se borra)`)) {
-      try { await API.borrarTurno(t.id); prog = await API.programa(); pintarLista(); aviso('Quitada del culto'); } catch (x) { aviso(x.message, true); }
-    }
-    return;
-  }
-  const el = e.target.closest('[data-id]');
-  if (el && !el.classList.contains('tenue')) abrir(el.dataset.id);
-};
-function pedirNombre() {
-  const n = prompt('¿Cuál es tu nombre? (como aparece en “Quién la canta”, ej: Hna. Ana)', miNombre);
-  if (n !== null) { miNombre = n.trim(); guardarLocal('miNombre', miNombre); }
-  pintarLista();
-}
-$('buscar').oninput = pintarLista;
-$('filtros').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  filtro = b.dataset.f; hermanoSel = null; $('buscar').value = '';
-  $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x === b));
-  pintarLista();
-};
 
-// ---------- Ver ----------
-function abrir(id) {
-  actual = cancionDe(id);
-  if (!actual) { mostrar('lista'); return pintarLista(); }
-  pasos = 0; latino = undefined;
-  pintarVer(); mostrar('ver');
+function vLista(){
+  if(!db.temas.length)return '<div class="empty">Primero añade los temas en la pestaña Temas.</div>';
+  if(!db.alumnos.length)return '<div class="empty">Primero añade alumnos.</div>';
+  const usados=new Set(db.sesiones.map(s=>s.temaId));
+  if(!lista||!tema(lista.temaId)){const t=db.temas.find(t=>!usados.has(t.id))||db.temas[0];lista={temaId:t.id,fecha:hoy(),profesor:'',asis:{}}}
+  db.alumnos.forEach(a=>{if(!(a.id in lista.asis))lista.asis[a.id]=true});
+  const subs=tema(lista.temaId).subs||[];
+  const opts=db.temas.map((t,i)=>`<option value="${esc(t.id)}" ${t.id===lista.temaId?'selected':''}>${i+1} · ${esc(t.nombre)}${usados.has(t.id)?' (ya dado)':''}</option>`).join('');
+  const pres=db.alumnos.filter(a=>lista.asis[a.id]).length;
+  const rows=db.alumnos.map(a=>`<div class="li"><div class="av">${esc(ini(a.nombre))}</div><div class="grow"><span class="name">${esc(a.nombre)}</span></div>
+  <div class="toggle"><button class="p ${lista.asis[a.id]?'on':''}" data-marca="${esc(a.id)}" data-v="1" aria-label="Presente">P</button><button class="f ${lista.asis[a.id]?'':'on'}" data-marca="${esc(a.id)}" data-v="0" aria-label="Falta">F</button></div></div>`).join('');
+  return `<label for="s-tema" class="sub">Tema de hoy</label><select id="s-tema">${opts}</select>
+  ${subs.length?`<div class="sub" style="background:var(--card);border-radius:12px;padding:10px 14px">Subtemas: ${subs.map(esc).join(' · ')}</div>`:''}
+  <label for="s-prof" class="sub">Hermano o hermana que da la clase</label><input id="s-prof" list="dl-prof2" placeholder="Ej. Hno. Luis" value="${esc(lista.profesor)}" autocomplete="off">
+  <datalist id="dl-prof2">${profesores().map(p=>`<option value="${esc(p)}">`).join('')}</datalist>
+  <label for="s-fecha" class="sub">Fecha</label><input type="date" id="s-fecha" value="${esc(lista.fecha)}">
+  <div class="row" style="justify-content:space-between;margin-top:6px"><h2>Alumnos</h2><span class="num">${pres} presentes · ${db.alumnos.length-pres} faltas</span></div>
+  <div class="list">${rows}</div><button class="btn" data-act="guardar">Guardar asistencia</button>`;
 }
-function pintarVer() {
-  const c = actual;
-  $('verTitulo').textContent = c.titulo;
-  $('verSub').textContent = [c.cantante && '🎤 ' + c.cantante, c.autor].filter(Boolean).join(' · ');
-  const hoy = hoyISO();
-  const prox = prog.turnos.filter(t => t.cancionId === c.id).map(t => ({ t, cu: prog.cultos.find(x => x.id === t.cultoId) }))
-    .filter(x => x.cu && x.cu.fecha >= hoy).sort((a, b) => a.cu.fecha.localeCompare(b.cu.fecha));
-  $('verProgramada').innerHTML = prox.map(x => `<div class="programada">📅 ${escaparHTML(fechaBonita(x.cu.fecha))} · ${escaparHTML(x.cu.nombre)}${x.t.cantante ? ' — 🎤 ' + escaparHTML(x.t.cantante) : ''}</div>`).join('');
-  // en qué tono la canta cada hermano (tocar uno = ver los acordes en ese tono)
-  const tonos = new Map();
-  if (c.tono) tonos.set('Original', c.tono);
-  prog.turnos.filter(t => t.cancionId === c.id && t.cantante).sort((a, b) => String(a.actualizada).localeCompare(String(b.actualizada)))
-    .forEach(t => tonos.set(t.cantante, tonoTurno(t, c)));
-  $('verTonos').innerHTML = tonos.size > 1 ? [...tonos].map(([n, t]) => `<span class="chip tono-chip" data-tono="${escaparHTML(t)}" style="padding-right:11px"><span>${escaparHTML(n)}</span><b class="tonoT">${escaparHTML(t)}</b></span>`).join('') : '';
-  $('tonoActual').textContent = c.tono ? transponerAcorde(c.tono, pasos, latino) : (pasos > 0 ? '+' : '') + pasos;
-  const secs = analizarLetra(c.letra);
-  $('vistaLetra').innerHTML = secs.length ? secs.map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latino)}</div>`).join('') : '<span class="tenue">Sin letra</span>';
-  $('vistaLetra').style.fontSize = tamLetra + 'px';
-  $('verNotas').textContent = c.notas ? '📝 ' + c.notas : '';
-}
-$('verTonos').onclick = e => { const ch = e.target.closest('[data-tono]'); if (!ch || !actual) return; const d = semitonos(actual.tono, ch.dataset.tono); if (d === null) return aviso('No se entiende ese tono', true); pasos = d; pintarVer(); };
-$('subir').onclick = () => { pasos++; pintarVer(); };
-$('bajar').onclick = () => { pasos--; pintarVer(); };
-$('notacion').onclick = () => { latino = latino === undefined ? true : latino ? false : undefined; $('notacion').textContent = latino === undefined ? 'Do/C' : latino ? 'Do' : 'C'; pintarVer(); };
-$('letraMas').onclick = () => { tamLetra = Math.min(30, tamLetra + 2); pintarVer(); };
-$('letraMenos').onclick = () => { tamLetra = Math.max(11, tamLetra - 2); pintarVer(); };
-$('btnAlCulto').onclick = () => abrirModalTurno({ cancionId: actual.id });
-$('btnEditar').onclick = () => editar(actual);
 
-// ---------- Ventana: agregar alabanza a un culto ----------
-let mt = {};
-function abrirModalTurno(o) {
-  const o2 = cultosOrdenados(prog);
-  if (o.turno) o = { cultoId: o.turno.cultoId, cancionId: o.turno.cancionId, turno: o.turno };
-  if (!o2.proximos.length && !o.cultoId) {
-    if (confirm('No hay cultos programados. ¿Crear uno ahora?')) abrirModalCulto(null, () => abrirModalTurno(o));
-    return;
-  }
-  mt = { cultoId: o.cultoId || (o2.proximos[0] && o2.proximos[0].id), cancionId: o.cancionId || null, turno: o.turno || null, tonoManual: !!(o.turno && o.turno.tono) };
-  $('mtCajaCancion').classList.toggle('oculto', !!o.cancionId);
-  $('mtCajaCulto').classList.toggle('oculto', !!o.cultoId);
-  const cu = prog.cultos.find(x => x.id === o.cultoId);
-  const c = cancionDe(o.cancionId);
-  $('mtTitulo').textContent = o.turno ? 'Cambiar quién canta o el tono' : o.cultoId ? 'Agregar alabanza' : 'Agregar a un culto';
-  $('mtSub').textContent = o.turno ? `${c ? c.titulo : ''} · ${nombreCulto(cu)}` : cu ? nombreCulto(cu) : c ? c.titulo : '';
-  $('mtCajaCancion').classList.toggle('oculto', !!o.cancionId);
-  $('mtCantante').value = o.turno ? (o.turno.cantante || '') : (c && c.cantante) || miNombre || '';
-  $('mtTono').value = o.turno ? tonoTurno(o.turno, c) : '';
-  $('mtGuardar').textContent = o.turno ? '✔ Guardar' : '✔ Agregar';
-  mt.tipo = o.turno ? (o.turno.tipo || '') : tipoSugerido(o.cancionId);
-  pintarTipos();
-  if (!o.turno) sugerirTono();
-  $('mtBuscar').value = '';
-  pintarModalTurno();
-  $('modalTurno').classList.remove('oculto');
+function vTemas(){
+  const sesPor=Object.fromEntries(db.sesiones.map(x=>[x.temaId,x]));
+  const items=db.temas.map((t,i)=>{const s=sesPor[t.id];const p=s?Object.values(s.asis||{}).filter(Boolean).length:0,n=s?Object.keys(s.asis||{}).length:0;
+    const open=abierto===t.id,ts=t.subs||[];
+    const subs=open?`<div style="padding:0 14px 14px 54px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line)">
+      ${ts.map((x,k)=>`<div class="row" style="gap:8px"><span style="flex:1;font-size:14px">• ${esc(x)}</span><button class="btn ghost sm" style="background:none;color:var(--mute);min-width:44px" data-delsub="${k}" aria-label="Quitar subtema">✕</button></div>`).join('')||'<span class="sub">Sin subtemas todavía.</span>'}
+      <form class="form" id="f-sub"><input id="n-sub" placeholder="Nuevo subtema" aria-label="Nuevo subtema" autocomplete="off"><button class="btn sm">Añadir</button></form></div>`:'';
+    return `<div class="li" style="${open?'border-bottom:0':''}">${s?'<div class="dot ok">✓</div>':'<div class="dot later"></div>'}<div class="grow"><span style="font-size:14px;font-weight:500">${i+1} · ${esc(t.nombre)}</span><span class="sub" style="font-size:12px">${s?`Dado el ${porQuien(s.fecha,s.profesor)} · ${p} de ${n} presentes`:'Aún no se ha dado'}</span></div>
+    <button class="btn ghost sm" style="background:none;color:var(--acc);white-space:nowrap" data-abrir="${esc(t.id)}" aria-expanded="${open}">${ts.length} subtema${ts.length===1?'':'s'} ${open?'▴':'▾'}</button></div>${subs}`}).join('');
+  return `<form class="form" id="f-tema"><label for="n-tema" class="oculto">Nombre del tema</label><input id="n-tema" placeholder="Nuevo tema" autocomplete="off"><button class="btn">Añadir</button></form>
+  <div class="list">${items||'<div class="empty">Sin temas todavía.<br><br><button class="btn" data-act="base">Cargar los 12 temas base</button></div>'}</div>`;
 }
-// Adoración o Coros: se propone lo que se usó antes con esa alabanza
-function tipoSugerido(cancionId) {
-  const prev = prog.turnos.filter(t => t.cancionId === cancionId && t.tipo).sort((a, b) => String(b.actualizada).localeCompare(String(a.actualizada)))[0];
-  return prev ? prev.tipo : '';
-}
-function pintarTipos() { $('mtTipos').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === mt.tipo)); }
-$('mtTipos').onclick = e => { const b = e.target.closest('[data-tipo]'); if (b) { mt.tipo = b.dataset.tipo; pintarTipos(); } };
-// el tono se propone solo: el que ese hermano usó antes con esa alabanza, o el original
-function sugerirTono() {
-  const c = cancionDe(mt.cancionId);
-  if (!c) { $('mtTonoAyuda').textContent = ''; return; }
-  if (!mt.tonoManual) $('mtTono').value = tonoSugerido(prog, c, $('mtCantante').value);
-  const t = $('mtTono').value.trim(), d = semitonos(c.tono, t);
-  $('mtTonoAyuda').textContent = c.tono ? (t && t !== c.tono ? `Original: ${c.tono}. Los músicos verán los acordes ya cambiados a ${t}${d !== null ? ' (' + (d > 0 ? '+' : '') + d + ' semitonos)' : ''}.` : `Tono original: ${c.tono}. Si este hermano la canta en otro tono, cámbialo aquí.`) : 'Escribe el tono en que la canta (ej: G, A, Sol, La).';
-}
-$('mtCantante').oninput = sugerirTono;
-$('mtTono').oninput = () => { mt.tonoManual = true; sugerirTono(); };
 
-function pintarModalTurno() {
-  const q = normalizar($('mtBuscar').value);
-  let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-  if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante).includes(q));
-  $('elegirCancionLista').innerHTML = l.map(c => `<div class="opcion ${c.id === mt.cancionId ? 'sel' : ''}" data-c="${c.id}"><span class="tit">${escaparHTML(c.titulo)}</span><span class="tenue" style="font-size:13px">${escaparHTML(c.cantante || '')}</span></div>`).join('') || '<div class="tenue">No hay alabanzas.</div>';
-  $('mtCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mt.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
+function render(){
+  if(!listo)return;
+  const f=document.activeElement,fid=f&&f.id,sel=f&&f.selectionStart;
+  header();
+  document.getElementById('main').innerHTML=detalle?vDetalle():tab==='alumnos'?vAlumnos():tab==='lista'?vLista():vTemas();
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',!detalle&&b.dataset.tab===tab));
+  for(const id in draft){const el=document.getElementById(id);if(el)el.value=draft[id]}
+  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(sel,sel)}catch(e){}}}
 }
-$('mtBuscar').oninput = pintarModalTurno;
-$('elegirCancionLista').onclick = e => { const o = e.target.closest('[data-c]'); if (!o) return; mt.cancionId = o.dataset.c; if (!mt.tipo) { mt.tipo = tipoSugerido(mt.cancionId); pintarTipos(); } const c = cancionDe(mt.cancionId); if (c && c.cantante && !$('mtCantante').value) $('mtCantante').value = c.cantante; sugerirTono(); pintarModalTurno(); };
-$('mtCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (!o) return; mt.cultoId = o.dataset.cu; pintarModalTurno(); };
-$('mtCancelar').onclick = () => $('modalTurno').classList.add('oculto');
-$('modalTurno').onclick = e => { if (e.target.id === 'modalTurno') $('modalTurno').classList.add('oculto'); };
-$('mtGuardar').onclick = async () => {
-  if (!mt.cancionId) return aviso('Elige la alabanza', true);
-  if (!mt.cultoId) return aviso('Elige el culto', true);
-  if (!mt.tipo) return aviso('Elige si va en Adoración o en Coros', true);
-  const cantante = $('mtCantante').value.trim(), tono = $('mtTono').value.trim();
-  // la misma alabanza puede ir 2 veces en un culto si la cantan hermanos distintos
-  const ya = mt.turno || prog.turnos.find(t => t.cultoId === mt.cultoId && t.cancionId === mt.cancionId && mismoNombre(t.cantante, cantante));
-  try {
-    // al cambiar de parte, va al final de esa parte
-    const alFinal = !ya || (ya.tipo || '') !== mt.tipo ? Date.now() : ya.orden;
-    await API.guardarTurno(ya ? { ...ya, cantante, tono, tipo: mt.tipo, orden: alFinal } : { cultoId: mt.cultoId, cancionId: mt.cancionId, cantante, tono, tipo: mt.tipo });
-    if (cantante && !miNombre) { miNombre = cantante; guardarLocal('miNombre', miNombre); }
-    prog = await API.programa();
-    $('modalTurno').classList.add('oculto');
-    aviso(ya ? 'Actualizado ✔' : 'Agregada al culto ✔');
-    if (pantalla === 'ver') pintarVer(); else pintarLista();
-  } catch (x) { aviso(x.message, true); }
-};
+const clear=(...ids)=>ids.forEach(i=>delete draft[i]);
 
-// ---------- Ventana: poner a un hermano en un culto ----------
-let mp = {};
-function abrirModalPart(o) {
-  const prox = cultosOrdenados(prog).proximos;
-  if (!prox.length && !o.cultoId) { if (confirm('No hay cultos programados. ¿Crear uno ahora?')) abrirModalCulto(null, () => abrirModalPart(o)); return; }
-  mp = { cultoId: o.cultoId || prox[0].id, fijo: !!o.cultoId };
-  actualizarNombres();
-  $('mpNombre').value = o.nombre || '';
-  $('mpRol').value = '';
-  $('listaRoles').innerHTML = ROLES.map(r => `<option value="${escaparHTML(r)}">`).join('');
-  $('mpRolesRapidos').innerHTML = ROLES.slice(0, 9).map(r => `<button class="mini" data-rol="${escaparHTML(r)}">${escaparHTML(r)}</button>`).join('');
-  $('mpCajaCulto').classList.toggle('oculto', mp.fijo);
-  const cu = prog.cultos.find(x => x.id === o.cultoId);
-  $('mpSub').textContent = cu ? nombreCulto(cu) : '';
-  $('mpTitulo').textContent = o.nombre ? `Poner a ${o.nombre} en un culto` : 'Agregar hermano al culto';
-  pintarModalPart();
-  $('modalPart').classList.remove('oculto');
-  if (!o.nombre) setTimeout(() => $('mpNombre').focus(), 50);
-}
-function pintarModalPart() {
-  $('mpCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mp.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
-}
-$('mpRolesRapidos').onclick = e => { const b = e.target.closest('[data-rol]'); if (b) $('mpRol').value = b.dataset.rol; };
-$('mpCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (o) { mp.cultoId = o.dataset.cu; pintarModalPart(); } };
-$('mpCancelar').onclick = () => $('modalPart').classList.add('oculto');
-$('modalPart').onclick = e => { if (e.target.id === 'modalPart') $('modalPart').classList.add('oculto'); };
-$('mpGuardar').onclick = async () => {
-  const nombre = $('mpNombre').value.trim(), rol = $('mpRol').value.trim();
-  if (!nombre) return aviso('Escribe el nombre del hermano', true);
-  if (!rol) return aviso('Elige qué hace ese día', true);
-  const ya = prog.participaciones.find(x => x.cultoId === mp.cultoId && mismoNombre(x.nombre, nombre) && normalizar(x.rol) === normalizar(rol));
-  if (ya) return aviso('Ya está en ese culto con esa función');
-  try {
-    await API.guardarParticipacion({ cultoId: mp.cultoId, nombre, rol });
-    prog = await API.programa();
-    $('modalPart').classList.add('oculto');
-    aviso(`${nombre} agregado ✔`); pintarLista();
-  } catch (x) { aviso(x.message, true); }
-};
-
-// ---------- Ventana: nuevo culto ----------
-let mcEditando = null, mcDespues = null, mcPrimero = 'adoracion';
-function pintarPrimero() { $('mcPrimero').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === mcPrimero)); }
-$('mcPrimero').onclick = e => { const b = e.target.closest('[data-tipo]'); if (b) { mcPrimero = b.dataset.tipo; pintarPrimero(); } };
-function abrirModalCulto(cu, despues) {
-  mcEditando = cu; mcDespues = despues || null;
-  $('mcTitulo').textContent = cu ? 'Cambiar culto' : 'Nuevo culto';
-  $('mcFecha').value = cu ? cu.fecha : hoyISO();
-  $('mcNombre').value = cu ? cu.nombre : 'Culto de alabanza';
-  $('mcBorrar').classList.toggle('oculto', !cu);
-  mcPrimero = cu && cu.primero === 'coros' ? 'coros' : 'adoracion'; pintarPrimero();
-  $('modalCulto').classList.remove('oculto');
-}
-$('mcCancelar').onclick = () => $('modalCulto').classList.add('oculto');
-$('modalCulto').onclick = e => { if (e.target.id === 'modalCulto') $('modalCulto').classList.add('oculto'); };
-$('mcGuardar').onclick = async () => {
-  if (!$('mcFecha').value) return aviso('Elige la fecha', true);
-  try {
-    await API.guardarCulto({ id: mcEditando && mcEditando.id, fecha: $('mcFecha').value, nombre: $('mcNombre').value, primero: mcPrimero });
-    prog = await API.programa();
-    $('modalCulto').classList.add('oculto');
-    aviso('Culto guardado ✔');
-    pintarLista();
-    if (mcDespues) mcDespues();
-  } catch (x) { aviso(x.message, true); }
-};
-$('mcBorrar').onclick = async () => {
-  if (!mcEditando || !confirm(`¿Borrar el culto “${nombreCulto(mcEditando)}”?\n(Las alabanzas no se borran)`)) return;
-  await API.borrarCulto(mcEditando.id); prog = await API.programa();
-  $('modalCulto').classList.add('oculto'); aviso('Culto borrado'); pintarLista();
-};
-
-// ---------- Editor ----------
-function editar(c) {
-  actual = c || null;
-  $('fTitulo').value = c ? c.titulo : '';
-  $('fCantante').value = c ? c.cantante : miNombre;
-  $('fTono').value = c ? c.tono : '';
-  $('fAutor').value = c ? c.autor : '';
-  $('fNotas').value = c ? c.notas : '';
-  $('textoLetra').value = c ? c.letra : '';
-  $('btnBorrar').classList.toggle('oculto', !c);
-  const nombres = [...new Set(canciones.map(x => x.cantante).concat(prog.turnos.map(t => t.cantante)).filter(Boolean))].sort();
-  $('listaCantantes').innerHTML = nombres.map(n => `<option value="${escaparHTML(n)}">`).join('');
-  const prox = cultosOrdenados(prog).proximos;
-  $('cajaCultoEditor').classList.toggle('oculto', !!c || !prox.length);
-  $('fCulto').innerHTML = '<option value="">— Ninguno por ahora —</option>' + prox.map(cu => `<option value="${cu.id}">${escaparHTML(nombreCulto(cu))}</option>`).join('');
-  pintarPrevia();
-  mostrar('editor');
-}
-function pintarPrevia() {
-  const d = diapositivas({ letra: $('textoLetra').value });
-  $('previa').innerHTML = d.length ? d.map((x, i) => `<div><small>${i + 1}${x.etiqueta ? ' · ' + escaparHTML(x.etiqueta) : ''}</small>${x.texto.map(escaparHTML).join('<br>')}</div>`).join('') : '<span class="tenue">Escribe la letra para ver las pantallas…</span>';
-}
-$('textoLetra').oninput = pintarPrevia;
-$('btnNueva').onclick = () => editar(null);
-$('btnCancelar').onclick = () => actual ? abrir(actual.id) : (mostrar('lista'), pintarLista());
-$('btnGuardar').onclick = async () => {
-  const datos = {
-    id: actual && actual.id,
-    titulo: $('fTitulo').value, cantante: $('fCantante').value, tono: $('fTono').value,
-    autor: $('fAutor').value, notas: $('fNotas').value, letra: $('textoLetra').value
-  };
-  if (!datos.titulo.trim()) { aviso('Escribe el nombre de la alabanza', true); return $('fTitulo').focus(); }
-  const cultoId = !actual && $('fCulto').value;
-  $('btnGuardar').disabled = true;
-  try {
-    const g = await API.guardarCancion(datos);
-    if (datos.cantante.trim() && !miNombre) { miNombre = datos.cantante.trim(); guardarLocal('miNombre', miNombre); }
-    canciones = await API.canciones();
-    if (cultoId) { await API.guardarTurno({ cultoId, cancionId: g.id, cantante: datos.cantante.trim(), tono: datos.tono.trim(), tipo: $('fTipo').value }); prog = await API.programa(); }
-    aviso('Guardada ✔ Se copiará sola a la PC de la iglesia');
-    abrir(g.id);
-  } catch (e) { aviso('No se pudo guardar: ' + e.message, true); }
-  $('btnGuardar').disabled = false;
-};
-$('btnBorrar').onclick = async () => {
-  if (!actual || !confirm(`¿Borrar “${actual.titulo}” para siempre?`)) return;
-  await API.borrarCancion(actual.id);
-  canciones = await API.canciones(); actual = null;
-  aviso('Alabanza borrada'); mostrar('lista'); pintarLista();
-};
-
-// ---------- Inicio y tiempo real ----------
-function repintar() {
-  if (!$('modalTurno').classList.contains('oculto')) pintarModalTurno();
-  if (pantalla === 'lista') pintarLista();
-  if (pantalla === 'ver' && actual) { actual = cancionDe(actual.id) || actual; pintarVer(); }
-}
-async function cargar() {
-  try { [canciones, estado, prog] = await Promise.all([API.canciones(), API.estado(), API.programa()]); } catch {}
-  if (cultosOrdenados(prog).proximos.some(cu => cu.fecha === hoyISO())) {
-    filtro = 'hoy';
-    $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x.dataset.f === 'hoy'));
-  }
-  pintarLista();
-}
-escucharEventos({
-  conexion: ok => $('conexion').classList.toggle('on', ok),
-  estado: e => { estado = e; },
-  canciones: async () => { canciones = await API.canciones(); repintar(); },
-  programa: async () => { prog = await API.programa(); repintar(); }
+document.addEventListener('input',e=>{if(e.target.id&&e.target.matches('input'))draft[e.target.id]=e.target.value;if(e.target.id==='s-prof'&&lista)lista.profesor=e.target.value});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const d=b.dataset;
+  if(d.tab){tab=d.tab;detalle=null;recup=null;render();scrollTo(0,0);return}
+  if(d.filtro){filtro=d.filtro;render();return}
+  if(d.alumno){detalle=d.alumno;render();scrollTo(0,0);return}
+  if(d.act==='volver'){detalle=null;recup=null;render();return}
+  if(d.act==='editar-tit'){editTit=true;clear('i-tit','i-sub');render();document.getElementById('i-tit').focus();return}
+  if(d.act==='cancelar-tit'){editTit=false;clear('i-tit','i-sub');render();return}
+  if(d.recuperar){recup=d.recuperar;clear('r-prof');render();const i=document.getElementById('r-prof');if(i)i.focus();return}
+  if(d.act==='cancelar'){recup=null;render();return}
+  if(d.abrir){abierto=abierto===d.abrir?null:d.abrir;render();return}
+  if(d.delsub){S.delSub(abierto,tema(abierto).subs[+d.delsub]);return}
+  if(d.act==='base'){S.temasBase();toast('Temas cargados');return}
+  if(d.borrar){if(b.dataset.ok){S.delAlumno(d.borrar);detalle=null;render();toast('Alumno quitado')}else{b.dataset.ok=1;b.textContent='Toca otra vez para confirmar'}return}
+  if(d.marca){lista.asis[d.marca]=d.v==='1';render();return}
+  if(d.act==='guardar'){
+    lista.profesor=document.getElementById('s-prof').value.trim();
+    if(!lista.profesor){toast('Escribe quién da la clase');document.getElementById('s-prof').focus();return}
+    lista.fecha=document.getElementById('s-fecha').value||hoy();
+    S.sesion(lista);lista=null;clear('s-prof','s-fecha');tab='alumnos';render();toast('Asistencia guardada');return}
+  if(d.act==='limpiar'){if(b.dataset.ok){S.limpiar();toast('Listo, empieza añadiendo alumnos')}else{b.dataset.ok=1;b.textContent='¿Seguro? Toca otra vez'}return}
 });
-cargar();
+document.addEventListener('change',e=>{
+  if(e.target.id==='s-tema'){lista.temaId=e.target.value;const ex=db.sesiones.find(s=>s.temaId===lista.temaId);
+    if(ex){lista.fecha=ex.fecha;lista.profesor=ex.profesor||lista.profesor;lista.asis={...ex.asis}}else lista.asis={};
+    clear('s-prof','s-fecha');render()}
+  if(e.target.id==='s-fecha')lista.fecha=e.target.value;
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();const v=id=>document.getElementById(id).value.trim();
+  if(e.target.id==='f-tit'){const t=v('i-tit'),s=v('i-sub');if(!t)return;editTit=false;clear('i-tit','i-sub');S.ajustes({titulo:t,subtitulo:s});render();toast('Nombre del curso actualizado')}
+  if(e.target.id==='f-alumno'){const n=v('n-alumno');if(!n)return;clear('n-alumno');S.addAlumno(n);render();toast('Alumno añadido')}
+  if(e.target.id==='f-recup'){const p=v('r-prof');if(!p){toast('Escribe quién dio la clase');return}
+    S.recup(detalle,{temaId:recup,fecha:document.getElementById('r-fecha').value,profesor:p});recup=null;clear('r-prof');render();toast('Tema marcado como recuperado')}
+  if(e.target.id==='f-sub'){const s=v('n-sub');if(!s)return;clear('n-sub');S.addSub(abierto,s);render();const i=document.getElementById('n-sub');if(i){i.value='';i.focus()}}
+  if(e.target.id==='f-tema'){const n=v('n-tema');if(!n)return;clear('n-tema');S.addTema(n);render();toast('Tema añadido')}
+});
+listo=true;render();
+
+/* instalar como app (PWA) */
+if('serviceWorker' in navigator&&location.protocol==='https:'&&!location.hostname.endsWith('claude.ai')){
+  try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+}
+}
 </script>
 </body>
 </html>
