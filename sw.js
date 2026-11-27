@@ -6,7 +6,7 @@
 //  IMPORTANTE: cada vez que cambies algún archivo de la app,
 //  sube el número de VERSION para que los teléfonos se actualicen.
 // =============================================================
-const VERSION = 'alabanzas-v2';
+const VERSION = 'alabanzas-v3';
 
 const ARCHIVOS = [
   './',
@@ -42,7 +42,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
-    for (const k of await caches.keys()) if (k !== VERSION) await caches.delete(k);
+    for (const k of await caches.keys()) if (k.startsWith('alabanzas-') && k !== VERSION) await caches.delete(k);
     await self.clients.claim();
   })());
 });
