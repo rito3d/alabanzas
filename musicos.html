@@ -7,12 +7,7 @@
 <title>Músicos — Alabanzas MMM</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icono.svg">
-<link rel="apple-touch-icon" href="iconos/apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Músicos">
-<script src="instalar.js" defer></script>
+<link rel="apple-touch-icon" href="icono.svg">
 <link rel="stylesheet" href="estilo.css">
 <style>
   main { max-width: 900px; margin: 0 auto; padding: 12px 14px 80px; }
@@ -39,7 +34,7 @@
   <div class="herram">
     <span class="tenue">Tono:</span>
     <button class="chico" id="bajar">−½</button>
-    <span class="tonoactual" id="tono">—</span><span class="tenue" id="tonoOrig" style="font-size:12px"></span>
+    <span class="tonoactual" id="tono">—</span>
     <button class="chico" id="subir">+½</button>
     <button class="chico" id="notacion">Do/C</button>
     <span style="flex:1"></span>
@@ -56,32 +51,18 @@
 import './nube.js';
 
 const $ = id => document.getElementById(id);
-let canciones = [], estado = {}, prog = { cultos: [], turnos: [] }, manual = '', manualCulto = '', manualTurno = '', pasos = {}, latino, tam = 18, ultimaSec = -1, ultimaId = null;
+let canciones = [], estado = { listaCulto: [] }, manual = '', pasos = {}, latino, tam = 18, ultimaSec = -1, ultimaId = null;
 try { tam = +localStorage.getItem('tamMusicos') || 18; } catch {}
 
-const cancionDe = id => canciones.find(c => c.id === id);
-// por adelantado: cada próximo culto con sus alabanzas en orden (para ensayar)
 function pintarSelector() {
-  const valor = manual ? manualCulto + '|' + manual + (manualTurno ? '|' + manualTurno : '') : '';
-  const op = (cu, t, i) => { const c = cancionDe(t.cancionId); const v = cu.id + '|' + c.id + '|' + t.id;
-    return `<option value="${v}" ${v === valor ? 'selected' : ''}>${i + 1}. ${t.tipo && TIPOS[t.tipo] ? TIPOS[t.tipo].icono + ' ' : ''}${escaparHTML(c.titulo)}${t.cantante ? ' — ' + escaparHTML(t.cantante) : ''}${tonoTurno(t, c) ? ' (' + escaparHTML(tonoTurno(t, c)) + ')' : ''}</option>`; };
-  const grupos = cultosOrdenados(prog).proximos.map(cu => {
-    const ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
-    return ts.length ? `<optgroup label="📅 ${escaparHTML(fechaBonita(cu.fecha, true))} · ${escaparHTML(cu.nombre)}">${ts.map((t, i) => op(cu, t, i)).join('')}</optgroup>` : '';
-  }).join('');
-  const todas = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'))
-    .map(c => `<option value="|${c.id}" ${('|' + c.id) === valor ? 'selected' : ''}>${escaparHTML(c.titulo)}</option>`).join('');
-  $('elegir').innerHTML = `<option value="">🔴 Seguir en vivo</option>${grupos}<optgroup label="🎵 Todas">${todas}</optgroup>`;
+  const culto = estado.listaCulto.map(id => canciones.find(c => c.id === id)).filter(Boolean);
+  const resto = canciones.filter(c => !estado.listaCulto.includes(c.id)).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  const op = c => `<option value="${c.id}" ${c.id === manual ? 'selected' : ''}>${escaparHTML(c.titulo)}</option>`;
+  $('elegir').innerHTML = `<option value="">🔴 Seguir en vivo</option>` +
+    (culto.length ? `<optgroup label="⭐ Culto de hoy">${culto.map(op).join('')}</optgroup>` : '') +
+    `<optgroup label="Todas">${resto.map(op).join('')}</optgroup>`;
 }
-$('elegir').onchange = () => { const [cu, id, tid] = ($('elegir').value || '|').split('|'); manual = id || ''; manualCulto = cu || ''; manualTurno = tid || ''; ultimaSec = -1; pintar(); };
-// en qué culto estamos: el elegido a mano, o el de hoy/próximo que tenga esta alabanza
-function cultoActual(cid) {
-  if (manual && manualCulto) return manualCulto;
-  const h = cultoDeHoy(prog);
-  if (h && turnosDe(prog, h.id).some(t => t.cancionId === cid)) return h.id;
-  const cu = cultosOrdenados(prog).proximos.find(x => turnosDe(prog, x.id).some(t => t.cancionId === cid));
-  return cu ? cu.id : null;
-}
+$('elegir').onchange = () => { manual = $('elegir').value; ultimaSec = -1; pintar(); };
 
 function pintar() {
   const id = manual || estado.cancionId;
@@ -91,22 +72,10 @@ function pintar() {
     $('letra').innerHTML = '<div class="vacio">Cuando el control ponga una alabanza en la pantalla, aparecerá aquí con sus acordes.</div>';
     $('notas').textContent = ''; pintarSiguiente(null); return;
   }
-  const cuId0 = cultoActual(c.id);
-  const turno0 = (manual && manualTurno && prog.turnos.find(t => t.id === manualTurno)) ||
-    (!manual && estado.cancionId === c.id && cuId0 && turnosDe(prog, cuId0).find(t => t.cancionId === c.id && mismoNombre(t.cantante, estado.cantante))) ||
-    (cuId0 && turnosDe(prog, cuId0).find(t => t.cancionId === c.id));
-  // tono de este hermano: los acordes se cambian solos (en vivo manda el tono que puso el control)
-  const objetivo = (!manual && estado.cancionId === c.id && estado.tono) || (turno0 && turno0.tono) || c.tono || '';
-  claveActual = c.id + '|' + objetivo;
-  const auto = semitonos(c.tono, objetivo) || 0;
-  const p = claveActual in pasos ? pasos[claveActual] : auto;
+  const p = pasos[c.id] || 0;
   $('titulo').textContent = c.titulo;
-  const cuId = cuId0, turno = turno0;
-  const quien = (!manual && estado.cancionId === c.id && estado.cantante) || (turno && turno.cantante) || c.cantante;
-  const cu = cuId && prog.cultos.find(x => x.id === cuId);
-  $('sub').textContent = [quien && '🎤 ' + quien, c.autor, cu && '📅 ' + fechaBonita(cu.fecha, true)].filter(Boolean).join(' · ');
+  $('sub').textContent = [c.cantante && '🎤 ' + c.cantante, c.autor].filter(Boolean).join(' · ');
   $('tono').textContent = c.tono ? transponerAcorde(c.tono, p, latino) : (p > 0 ? '+' : '') + p;
-  $('tonoOrig').textContent = c.tono && p ? `original ${transponerAcorde(c.tono, 0, latino)}` : '';
   const secs = analizarLetra(c.letra);
   // qué sección corresponde a la pantalla en vivo
   const conLetra = secs.map((s, i) => s.lineas.some(l => l.letra.trim()) ? i : -1).filter(i => i >= 0);
@@ -119,23 +88,18 @@ function pintar() {
     const el = $('sec' + secActual);
     el && el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  ultimaSec = secActual; ultimaId = c.id; turnoVisto = turno0 || null;
+  ultimaSec = secActual; ultimaId = c.id;
   pintarSiguiente(c);
 }
 function pintarSiguiente(c) {
-  const cuId = c && cultoActual(c.id);
-  const ts = cuId ? turnosDe(prog, cuId).filter(t => cancionDe(t.cancionId)) : [];
-  const i = c ? (turnoVisto ? ts.findIndex(t => t.id === turnoVisto.id) : ts.findIndex(t => t.cancionId === c.id)) : -1;
-  const tSig = i >= 0 && ts[i + 1];
-  const sig = tSig && { ...cancionDe(tSig.cancionId), cantante: tSig.cantante || cancionDe(tSig.cancionId).cantante };
+  const i = c ? estado.listaCulto.indexOf(c.id) : -1;
+  const sig = i >= 0 && canciones.find(x => x.id === estado.listaCulto[i + 1]);
   $('siguiente').classList.toggle('oculto', !sig);
-  if (sig) sig.tono = tonoTurno(tSig, sig);
   if (sig) $('siguiente').innerHTML = `<span class="tenue">Después:</span> <b>${escaparHTML(sig.titulo)}</b> ${sig.tono ? '· <span style="color:var(--acento)">' + escaparHTML(sig.tono) + '</span>' : ''} ${sig.cantante ? '· 🎤 ' + escaparHTML(sig.cantante) : ''}`;
 }
-let claveActual = '', turnoVisto = null;
-const pasosActuales = () => { const [id, obj] = claveActual.split('|'); const c = cancionDe(id); return claveActual in pasos ? pasos[claveActual] : (c ? semitonos(c.tono, obj) || 0 : 0); };
-$('subir').onclick = () => { if (claveActual) { pasos[claveActual] = pasosActuales() + 1; pintar(); } };
-$('bajar').onclick = () => { if (claveActual) { pasos[claveActual] = pasosActuales() - 1; pintar(); } };
+const idActual = () => manual || estado.cancionId;
+$('subir').onclick = () => { const id = idActual(); if (id) { pasos[id] = (pasos[id] || 0) + 1; pintar(); } };
+$('bajar').onclick = () => { const id = idActual(); if (id) { pasos[id] = (pasos[id] || 0) - 1; pintar(); } };
 $('notacion').onclick = () => { latino = latino === undefined ? true : latino ? false : undefined; $('notacion').textContent = latino === undefined ? 'Do/C' : latino ? 'Do' : 'C'; pintar(); };
 const guardarTam = () => { try { localStorage.setItem('tamMusicos', tam); } catch {} };
 $('mas').onclick = () => { tam = Math.min(34, tam + 2); guardarTam(); pintar(); };
@@ -144,10 +108,9 @@ $('menos').onclick = () => { tam = Math.max(11, tam - 2); guardarTam(); pintar()
 escucharEventos({
   conexion: ok => $('conexion').classList.toggle('on', ok),
   estado: e => { estado = e; pintarSelector(); pintar(); },
-  canciones: async () => { canciones = await API.canciones(); pintarSelector(); pintar(); },
-  programa: async () => { prog = await API.programa(); pintarSelector(); pintar(); }
+  canciones: async () => { canciones = await API.canciones(); pintarSelector(); pintar(); }
 });
-Promise.all([API.canciones(), API.programa()]).then(([c, p]) => { canciones = c; prog = p; pintarSelector(); pintar(); });
+API.canciones().then(c => { canciones = c; pintarSelector(); pintar(); });
 </script>
 </body>
 </html>
