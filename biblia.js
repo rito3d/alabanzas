@@ -1,14 +1,29 @@
 // =============================================================
-//  Biblia Reina-Valera 1909 (dominio público)
-//  El archivo biblia-rv1909.json se baja la primera vez que se abre
+//  Biblia: Reina-Valera 1909 y Louis Segond 1910 (dominio público)
+//  El archivo de cada versión se baja la primera vez que se abre
 //  la Biblia y queda guardado en el teléfono (funciona sin internet).
 // =============================================================
-let _biblia = null, _cargando = null;
-function cargarBiblia() {
-  if (_biblia) return Promise.resolve(_biblia);
-  if (!_cargando) _cargando = fetch('biblia-rv1909.json').then(r => { if (!r.ok) throw new Error('No se pudo bajar la Biblia'); return r.json(); })
-    .then(b => (_biblia = b)).catch(e => { _cargando = null; throw e; });
-  return _cargando;
+// Versiones disponibles (todas de dominio público). Los índices de libros son iguales en todas.
+const VERSIONES_BIBLIA = {
+  rv1909: { archivo: 'biblia-rv1909.json', nombre: 'Reina-Valera 1909', corto: 'RV1909', bandera: '🇪🇸' },
+  lsg1910: { archivo: 'biblia-lsg1910.json', nombre: 'Louis Segond 1910', corto: 'LSG', bandera: '🇫🇷' }
+};
+function versionBiblia() { let v = null; try { v = localStorage.getItem('bibliaVersion'); } catch {} return VERSIONES_BIBLIA[v] ? v : 'rv1909'; }
+function elegirVersionBiblia(v) { try { localStorage.setItem('bibliaVersion', v); } catch {} }
+const _biblias = {}, _cargas = {};
+function cargarBiblia(v) {
+  v = v || versionBiblia();
+  if (_biblias[v]) return Promise.resolve(_biblias[v]);
+  if (!_cargas[v]) _cargas[v] = fetch(VERSIONES_BIBLIA[v].archivo).then(r => { if (!r.ok) throw new Error('No se pudo bajar la Biblia'); return r.json(); })
+    .then(b => (_biblias[v] = b)).catch(e => { delete _cargas[v]; throw e; });
+  return _cargas[v];
+}
+// La Reina-Valera 1960 tiene derechos de autor: no se puede copiar dentro de la app,
+// pero se puede abrir el mismo pasaje en Bible Gateway.
+const LIBROS_EN = ['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Songs','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi','Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation'];
+function enlaceRVR1960(c) {
+  const ref = LIBROS_EN[c.libro] + ' ' + c.cap + (c.desde ? ':' + c.desde + (c.hasta > c.desde ? '-' + c.hasta : '') : '');
+  return 'https://www.biblegateway.com/passage/?search=' + encodeURIComponent(ref) + '&version=RVR1960';
 }
 
 // abreviaturas comunes → número de libro (0 = Génesis)
