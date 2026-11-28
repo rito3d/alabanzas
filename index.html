@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#10131a">
+<meta name="theme-color" content="#1e2f4d">
 <title>Alabanzas MMM</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icono.svg">
@@ -15,55 +15,115 @@
 <script src="instalar.js" defer></script>
 <link rel="stylesheet" href="estilo.css">
 <style>
-  main { max-width: 760px; margin: 0 auto; padding: 14px 14px 100px; }
-  .buscador { display: flex; gap: 8px; margin-bottom: 10px; }
-  .filtros { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
-  .filtros button { flex: none; border-radius: 99px; padding: 7px 14px; font-size: 14px; }
+  /* ======= tema claro (la vista de músicos sigue oscura) ======= */
+  :root {
+    --fondo: #f2f4f8; --panel: #ffffff; --panel2: #eef1f6; --borde: #e1e6ee;
+    --texto: #1b2638; --tenue: #6b7486; --acento: #e08a35; --acento2: #2f5fb3;
+    --navy: #1e2f4d; --peligro: #d93f3f; --ok: #1f9d63; --radio: 18px;
+  }
+  html, body { background: var(--fondo); }
+  button { background: var(--panel); }
+  button.prim { background: var(--acento); color: var(--navy); border-color: var(--acento); font-weight: 700; }
+  button.activo { background: var(--navy); color: #fff; border-color: var(--navy); }
+  input, select, textarea { background: var(--panel); }
+  .tarjeta { border-radius: var(--radio); box-shadow: 0 1px 3px rgba(20,30,50,.06); }
+  .vista-acordes .acordes { color: #b9600f; }
+  .vista-acordes .etq { color: var(--acento2); }
+  a.boton { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: var(--texto); background: var(--panel); border: 1px solid var(--borde); border-radius: 10px; padding: 10px 14px; flex: 1; }
+  a.boton.peligro { color: var(--peligro); }
+
+  /* encabezado */
+  header.barra { background: var(--navy); color: #fff; border: 0; border-radius: 0 0 24px 24px; gap: 12px;
+    padding: calc(14px + env(safe-area-inset-top)) calc(18px + env(safe-area-inset-right)) 18px calc(18px + env(safe-area-inset-left)); }
+  header.barra h1 { font-size: 21px; font-weight: 700; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .logo { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,.15); flex: none; }
+  .icono-btn { width: 42px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; padding: 0; flex: none;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); color: #fff; text-decoration: none; font-size: 18px; }
+  .icono-btn svg { width: 20px; height: 20px; }
+  .atras { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.25); color: #fff; font-size: 22px; padding: 4px 14px; border-radius: 99px; }
+  header .punto { box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+
+  /* barra de pestañas */
+  .nav { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(12px + env(safe-area-inset-bottom)); width: min(94vw, 540px);
+    background: var(--navy); border-radius: 28px; display: flex; padding: 7px; gap: 2px; box-shadow: 0 10px 30px rgba(20,30,50,.3); z-index: 20; }
+  .nav button { flex: 1; background: none; border: 0; color: #b7c1d6; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 2px 7px; border-radius: 22px; font-size: 11.5px; font-weight: 600; }
+  .nav button svg { width: 23px; height: 23px; }
+  .nav button.sel { background: var(--acento); color: var(--navy); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 18px 16px 130px; }
+  .saludo h2 { font-size: 28px; margin: 4px 0 2px; letter-spacing: -.02em; }
+  .saludo .fecha { color: var(--tenue); font-size: 16px; margin-bottom: 16px; }
+  .titulo-sec { display: flex; align-items: baseline; justify-content: space-between; margin: 22px 4px 10px; }
+  .titulo-sec h3 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+  .titulo-sec a { color: var(--acento2); font-weight: 600; text-decoration: none; font-size: 15px; cursor: pointer; }
+  .servicio { padding: 18px; cursor: pointer; }
+  .servicio b.g { display: block; font-size: 18px; margin-bottom: 4px; }
+  .servicio .eq { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .semana-cab { display: flex; gap: 6px; align-items: center; }
+  .semana { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; flex: 1; }
+  .dia { background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 10px 0 7px; text-align: center; cursor: pointer; }
+  .dia small { display: block; font-size: 11px; color: var(--tenue); font-weight: 700; text-transform: uppercase; }
+  .dia b { font-size: 19px; }
+  .dia .pt { width: 6px; height: 6px; border-radius: 50%; margin: 4px auto 0; background: transparent; }
+  .dia .pt.si { background: var(--acento); }
+  .dia.hoy:not(.sel) { border-color: var(--acento); }
+  .dia.sel { background: var(--navy); border-color: var(--navy); color: #fff; }
+  .dia.sel small { color: #c9d3e6; }
+  .flecha { padding: 6px 8px; border-radius: 10px; flex: none; }
+
+  .buscador { display: flex; gap: 8px; margin-bottom: 12px; }
   .cancion { display: flex; gap: 12px; align-items: center; padding: 13px 14px; margin-bottom: 8px; cursor: pointer; }
   .cancion .info { flex: 1; min-width: 0; }
   .cancion .tit { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cancion .sub { font-size: 14px; color: var(--tenue); margin-top: 2px; }
-  .tono { font-weight: 700; color: var(--acento); font-size: 15px; min-width: 34px; text-align: center; }
+  .tono { font-weight: 800; color: var(--acento); font-size: 15px; min-width: 40px; height: 40px; border-radius: 12px; background: #fdf1e5; display: flex; align-items: center; justify-content: center; }
   .encult { color: var(--ok); font-size: 12px; font-weight: 600; }
-  .flotante { position: fixed; right: 18px; bottom: 22px; border-radius: 99px; padding: 15px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 17px; z-index: 5; }
-  .ayuda { font-size: 13px; color: var(--tenue); background: var(--panel); border: 1px dashed var(--borde); border-radius: 10px; padding: 10px 12px; margin-top: 8px; line-height: 1.5; }
-  .ayuda code { color: var(--acento); }
+  .flotante { position: fixed; right: 18px; bottom: calc(96px + env(safe-area-inset-bottom)); border-radius: 99px; padding: 14px 20px; box-shadow: 0 8px 24px rgba(20,30,50,.3); font-size: 16px; z-index: 15; }
+  .ayuda { font-size: 13px; color: var(--tenue); background: var(--panel); border: 1px dashed var(--borde); border-radius: 12px; padding: 10px 12px; margin-top: 8px; line-height: 1.5; }
+  .ayuda code { color: #b9600f; }
   .acciones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
   .acciones button { flex: 1; }
-  .ver-cab h2 { margin: 6px 0 2px; font-size: 22px; }
+  .ver-cab h2 { margin: 6px 0 2px; font-size: 24px; }
   .herram { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
   .herram .tonoactual { min-width: 56px; text-align: center; font-weight: 700; color: var(--acento); }
   #vistaLetra { font-size: 16px; }
-  .vacio { text-align: center; color: var(--tenue); padding: 40px 10px; }
+  .vacio { text-align: center; color: var(--tenue); padding: 34px 10px; }
   #textoLetra { min-height: 340px; }
   .diap-prev { display: grid; gap: 8px; margin-top: 10px; }
-  .diap-prev div { background: #000; border-radius: 8px; padding: 10px; text-align: center; font-size: 14px; line-height: 1.4; }
-  .diap-prev small { display: block; color: var(--acento2); font-size: 11px; margin-bottom: 4px; text-transform: uppercase; }
+  .diap-prev div { background: #000; color: #fff; border-radius: 8px; padding: 10px; text-align: center; font-size: 14px; line-height: 1.4; }
+  .diap-prev small { display: block; color: #7cc4ff; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; }
+  .segm { display: flex; background: var(--panel2); border-radius: 14px; padding: 4px; gap: 4px; margin-bottom: 14px; }
+  .segm button { flex: 1; border: 0; background: none; border-radius: 11px; padding: 9px; font-weight: 600; color: var(--tenue); }
+  .segm button.sel { background: var(--panel); color: var(--texto); box-shadow: 0 1px 3px rgba(20,30,50,.12); }
+
   /* cultos */
   .culto { margin-bottom: 14px; padding: 0; overflow: hidden; }
   .culto.hoy { border-color: var(--acento); }
-  .culto-cab { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--panel2); }
+  .culto-cab { display: flex; align-items: center; gap: 10px; padding: 13px 14px; background: var(--panel2); }
   .culto-cab .f { flex: 1; min-width: 0; }
   .culto-cab b { display: block; font-size: 16px; }
   .culto-cab small { color: var(--tenue); }
   .turno { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--borde); cursor: pointer; }
-  .turno .n { color: var(--acento); font-weight: 700; width: 20px; text-align: center; }
+  .turno .n { color: var(--acento); font-weight: 800; width: 22px; text-align: center; flex: none; }
   .turno .info { flex: 1; min-width: 0; }
   .turno .tit { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .turno .sub { font-size: 14px; color: var(--tenue); }
   .turno.mio .sub b { color: var(--ok); }
+  .turno.bloque { background: #fafbfd; }
+  .turno.bloque .tit { font-weight: 600; color: var(--navy); }
   .culto-pie { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--borde); }
-  .culto-pie button { flex: 1; font-size: 14px; padding: 9px; }
+  .culto-pie button { flex: 1; font-size: 14px; padding: 9px 6px; }
   .mini { padding: 4px 9px; font-size: 13px; border-radius: 8px; }
-  .seccion-t { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--tenue); margin: 18px 2px 8px; }
-  .programada { background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.35); color: var(--ok); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 14px; }
-  /* ventana emergente */
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
-  .modal .hoja { background: var(--panel); border: 1px solid var(--borde); border-radius: 16px 16px 0 0; width: 100%; max-width: 760px; max-height: 88vh; overflow-y: auto; padding: 18px 16px 24px; }
-  @media (min-width: 700px) { .modal { align-items: center; } .modal .hoja { border-radius: 16px; } }
-  .modal h3 { margin: 0 0 4px; }
-  .opcion { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--borde); border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
-  .opcion.sel { border-color: var(--acento); background: rgba(242,177,52,.08); }
+  .seccion-t { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--tenue); margin: 20px 4px 8px; font-weight: 700; }
+  .programada { background: rgba(31,157,99,.08); border: 1px solid rgba(31,157,99,.3); color: var(--ok); border-radius: 10px; padding: 8px 12px; margin-top: 10px; font-size: 14px; }
+  /* ventanas emergentes */
+  .modal { position: fixed; inset: 0; background: rgba(15,22,38,.55); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .modal .hoja { background: var(--panel); border-radius: 22px 22px 0 0; width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto; padding: 20px 16px calc(24px + env(safe-area-inset-bottom)); }
+  @media (min-width: 700px) { .modal { align-items: center; } .modal .hoja { border-radius: 22px; } }
+  .modal h3 { margin: 0 0 4px; font-size: 20px; }
+  .opcion { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid var(--borde); border-radius: 12px; margin-bottom: 8px; cursor: pointer; }
+  .opcion.sel { border-color: var(--acento); background: #fdf1e5; }
   .opcion .tit { font-weight: 600; flex: 1; min-width: 0; }
   #elegirCancionLista { max-height: 40vh; overflow-y: auto; margin-top: 8px; }
   .equipo { padding: 8px 14px 10px; border-top: 1px solid var(--borde); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -72,34 +132,45 @@
   .chip.mio { border-color: var(--ok); }
   .chip b { font-weight: 600; } .chip span { color: var(--tenue); }
   .chip button { padding: 0 6px; border: 0; background: none; font-size: 12px; color: var(--tenue); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips button { border-radius: 99px; padding: 7px 13px; font-size: 14px; }
+  .chips button.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
   .hermano { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; }
-  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--panel2); border: 1px solid var(--borde); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acento2); flex: none; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e7edf8; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--navy); flex: none; }
   .hermano .info { flex: 1; min-width: 0; } .hermano .sub { font-size: 13px; color: var(--tenue); }
   .tono-chip { cursor: pointer; }
   .tonoT { color: var(--acento); font-weight: 700; }
-  .parte { padding: 8px 14px 6px; border-top: 1px solid var(--borde); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); background: rgba(79,182,255,.06); }
-  .parte.coros { color: #f59e0b; background: rgba(245,158,11,.07); }
+  .parte { padding: 8px 14px 6px; border-top: 1px solid var(--borde); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); background: rgba(47,95,179,.06); }
+  .parte.coros { color: #b46c00; background: rgba(224,138,53,.09); }
   .parte.sin { color: var(--tenue); background: none; }
   .parte span { font-weight: 400; color: var(--tenue); margin-left: 4px; }
   .turno.ordenando { cursor: default; }
   .ayuda-orden { padding: 8px 14px; font-size: 13px; color: var(--tenue); border-top: 1px solid var(--borde); }
   .tipos { display: flex; gap: 8px; margin-top: 6px; }
-  .tipos button { flex: 1; padding: 11px; }
-  .tipos button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
-  /* ======= HOY ======= */
+  .tipos button { flex: 1; padding: 11px 6px; }
+  .tipos button.sel { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 700; }
+  .vers-prev { font-size: 14px; line-height: 1.5; background: var(--panel2); border-radius: 10px; padding: 10px 12px; margin-top: 8px; max-height: 26vh; overflow-y: auto; white-space: pre-line; }
+  .vers-prev:empty { display: none; }
+  .finde-dia { margin-top: 10px; padding: 12px; }
+  .finde-dia .chk { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 16px; color: var(--texto); }
+  .finde-dia .chk input { width: 20px; height: 20px; }
+  .finde-dia .fila + input { margin-top: 8px; }
+
+  /* ======= día del culto (letra / acordes) ======= */
   .modo-hoy { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
   .modo-hoy button { padding: 10px 8px; line-height: 1.25; white-space: normal; }
   .modo-hoy button small { display: block; font-weight: 400; font-size: 12px; opacity: .8; }
-  .modo-hoy button.sel { background: var(--acento); color: #1b1404; border-color: var(--acento); font-weight: 700; }
+  .modo-hoy button.sel { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 700; }
   .hoy-herr { margin: 0 0 12px; }
-  .hoy-cab { padding: 12px 14px; margin-bottom: 10px; border-color: var(--acento); }
+  .hoy-cab { padding: 14px; margin-bottom: 10px; border-color: var(--acento); }
   .hoy-cab b { font-size: 18px; display: block; }
   .hoy-cab .eq { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
   .hoy-indice { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
   .hoy-indice a { color: var(--texto); text-decoration: none; padding: 5px 2px; font-size: 15px; display: flex; gap: 8px; }
-  .hoy-indice a .n { color: var(--acento); font-weight: 700; width: 20px; text-align: right; flex: none; }
+  .hoy-indice a .n { color: var(--acento); font-weight: 700; width: 22px; text-align: right; flex: none; }
   .hoy-indice a.mio { color: var(--ok); }
-  .hoy-cancion { margin-bottom: 14px; padding: 0; overflow: hidden; scroll-margin-top: 70px; }
+  .hoy-indice a.bl { color: var(--tenue); }
+  .hoy-cancion { margin-bottom: 14px; padding: 0; overflow: hidden; scroll-margin-top: 100px; }
   .hoy-cancion.mio { border-color: var(--ok); }
   .hoy-cancion .cab { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: var(--panel2); border-bottom: 1px solid var(--borde); }
   .hoy-cancion .cab .n { color: var(--acento); font-weight: 800; font-size: 20px; min-width: 22px; }
@@ -109,39 +180,64 @@
   .hoy-cancion .cab .tonoG { font-size: 20px; font-weight: 800; color: var(--acento); }
   .hoy-cancion .cuerpo { padding: 12px 14px 16px; }
   .hoy-cancion .notas { font-size: 14px; color: var(--tenue); margin-top: 10px; }
+  .hoy-bloque .cab { background: #f6f8fc; border-bottom: 0; }
+  .hoy-bloque .cuerpo { border-top: 1px solid var(--borde); }
   .letra-limpia { text-align: center; line-height: 1.5; }
   .letra-limpia .estrofa { margin-bottom: 1.1em; }
   .letra-limpia .etq { font-size: .62em; letter-spacing: .08em; text-transform: uppercase; color: var(--acento2); font-weight: 700; margin-bottom: 2px; }
-  .hoy-parte { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); margin: 16px 2px 8px; }
-  .hoy-parte.coros { color: #f59e0b; }
-  .hoy-arriba { position: fixed; right: 18px; bottom: 22px; z-index: 5; border-radius: 99px; padding: 12px 16px; box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+  .hoy-parte { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--acento2); margin: 16px 4px 8px; }
+  .hoy-parte.coros { color: #b46c00; }
+
+  /* ======= Biblia ======= */
+  .capitulo { padding: 16px 16px 8px; line-height: 1.6; }
+  .capitulo h3 { margin: 0 0 10px; font-size: 20px; }
+  .vers { margin: 0 0 6px; padding: 4px 8px; border-radius: 8px; cursor: pointer; }
+  .vers sup { color: var(--acento); font-weight: 700; margin-right: 4px; }
+  .vers.sel { background: #fdf1e5; box-shadow: inset 3px 0 0 var(--acento); }
+  .cap-nav { display: flex; gap: 8px; margin-top: 12px; }
+  .cap-nav button { flex: 1; }
+  .res { padding: 12px 14px; margin-bottom: 8px; cursor: pointer; font-size: 15px; line-height: 1.45; }
+  .res b { color: var(--acento2); display: block; font-size: 13px; margin-bottom: 2px; }
+  .res mark { background: #fde3c4; color: inherit; border-radius: 3px; }
+  .bbarra { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(92px + env(safe-area-inset-bottom)); width: min(94vw, 540px); z-index: 16;
+    background: var(--panel); border: 1px solid var(--borde); border-radius: 18px; padding: 10px 10px 10px 16px; display: flex; gap: 8px; align-items: center; box-shadow: 0 8px 26px rgba(20,30,50,.22); }
+  .bbarra .r { flex: 1; min-width: 0; font-weight: 700; }
+  .bbarra .r small { display: block; font-weight: 400; color: var(--tenue); font-size: 12px; }
 </style>
 </head>
 <body>
 
 <header class="barra">
-  <button id="btnAtras" class="chico oculto">‹ Volver</button>
-  <h1 id="tituloBarra">🎵 Alabanzas MMM</h1>
-  <a href="musicos.html" class="chico" style="text-decoration:none;font-size:14px" title="Vista de músicos">🎸 Músicos</a>
+  <button id="btnAtras" class="atras oculto" aria-label="Volver">‹</button>
+  <img src="icono.svg" class="logo" id="logo" alt="">
+  <h1 id="tituloBarra" style="flex:1">Alabanzas MMM</h1>
   <span class="punto" id="conexion" title="Verde: conectado · Rojo: sin internet (se guarda y se sube después)"></span>
+  <a href="musicos.html" class="icono-btn" id="btnMusicos" title="Vista de músicos">🎸</a>
+  <button class="icono-btn" id="btnAjustes" title="Ajustes" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
 </header>
 
 <main>
-  <!-- ======= LISTA ======= -->
+  <!-- ======= PESTAÑAS ======= -->
   <section id="pantallaLista">
-    <div class="buscador" id="cajaBuscar">
+    <div class="buscador oculto" id="cajaBuscar">
       <input id="buscar" type="search" placeholder="Buscar alabanza, hermano o letra…">
     </div>
-    <div class="filtros" id="filtros">
-      <button data-f="hoy">⭐ Hoy</button>
-      <button data-f="cultos" class="activo">📅 Cultos</button>
-      <button data-f="mias">🙋 Lo que me toca</button>
-      <button data-f="hermanos">👥 Hermanos</button>
-      <button data-f="todas">🎵 Todas las alabanzas</button>
-    </div>
     <div id="lista"></div>
-    <div style="text-align:center;margin-top:30px"><a href="#salir" class="tenue" style="font-size:13px">Cerrar sesión</a></div>
-    <button class="prim flotante" id="btnNueva">＋ Nueva alabanza</button>
+
+    <!-- Biblia (fija, para no perder lo que se escribe) -->
+    <div id="secBiblia" class="oculto">
+      <form class="buscador" id="bForm">
+        <input id="bBuscar" type="search" placeholder="Ej: Juan 3:16-18, Salmo 23 o palabras" autocomplete="off">
+        <button class="prim">Buscar</button>
+      </form>
+      <div class="fila"><select id="bLibro"></select><select id="bCap" style="flex:.45"></select></div>
+      <div class="herram">
+        <span class="tenue" style="font-size:13px">Reina-Valera 1909</span><span style="flex:1"></span>
+        <button class="chico" id="bMenos">A−</button><button class="chico" id="bMas">A+</button>
+      </div>
+      <div id="bRes"></div>
+    </div>
+    <button class="prim flotante oculto" id="btnNueva">＋ Nueva alabanza</button>
   </section>
 
   <!-- ======= VER ======= -->
@@ -219,6 +315,15 @@ Santo, santo…"></textarea>
   </section>
 </main>
 
+<!-- barra de pestañas -->
+<nav class="nav" id="nav">
+  <button data-tab="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
+  <button data-tab="canciones"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Canciones</button>
+  <button data-tab="cultos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Cultos</button>
+  <button data-tab="biblia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H20v17H7.5A2.5 2.5 0 0 0 5 21.5z"/><path d="M5 21.5v-17M13 6v8M10 9h6"/></svg>Biblia</button>
+  <button data-tab="equipo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.5a5 5 0 0 1 5 5"/></svg>Equipo</button>
+</nav>
+
 <!-- ======= VENTANA: agregar alabanza a un culto ======= -->
 <div class="modal oculto" id="modalTurno">
   <div class="hoja">
@@ -269,10 +374,46 @@ Santo, santo…"></textarea>
   </div>
 </div>
 
+<!-- ======= VENTANA: bloque del culto (oración, versículo, ofrenda…) ======= -->
+<div class="modal oculto" id="modalBloque">
+  <div class="hoja">
+    <h3 id="mbTitulo">Agregar al orden del culto</h3>
+    <div class="tenue" id="mbSub" style="font-size:14px"></div>
+    <label>¿Qué es?</label>
+    <div class="chips" id="mbClases"></div>
+    <label>Título</label>
+    <input id="mbNombre" placeholder="Ej: Oración de apertura" autocomplete="off">
+    <div id="mbCajaVers">
+      <label>Cita bíblica</label>
+      <input id="mbCita" placeholder="Ej: Salmo 100:1-5" autocomplete="off">
+      <div class="vers-prev" id="mbTexto"></div>
+    </div>
+    <label>¿Quién lo hace? (opcional)</label>
+    <input id="mbResp" list="listaCantantes" placeholder="Hno. / Hna. / Pastor" autocomplete="off">
+    <label>Nota (opcional)</label>
+    <input id="mbNota" placeholder="Ej: 5 minutos, música suave de fondo" autocomplete="off">
+    <label>¿En qué parte del culto va?</label>
+    <div class="tipos" id="mbTipos"><button data-tipo="adoracion">🙏 Adoración</button><button data-tipo="coros">🎉 Coros</button><button data-tipo="">📌 Al final</button></div>
+    <div id="mbCajaCulto">
+      <label>¿En qué culto?</label>
+      <div id="mbCultos"></div>
+    </div>
+    <div class="acciones">
+      <button class="peligro oculto" id="mbBorrar">🗑 Quitar</button>
+      <button id="mbCancelar">Cancelar</button>
+      <button class="prim" id="mbGuardar">✔ Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======= VENTANA: nuevo culto ======= -->
 <div class="modal oculto" id="modalCulto">
   <div class="hoja">
     <h3 id="mcTitulo">Nuevo culto</h3>
+    <div id="mcCajaPl">
+      <label>Usar una plantilla</label>
+      <div class="chips" id="mcPlantillas"></div>
+    </div>
     <label>Fecha</label>
     <input id="mcFecha" type="date">
     <label>Nombre</label>
@@ -283,6 +424,9 @@ Santo, santo…"></textarea>
       <option value="Noche de alabanza"><option value="Culto de alabanza"><option value="Culto dominical">
       <option value="Culto de oración"><option value="Vigilia"><option value="Culto de jóvenes">
     </datalist>
+    <div class="acciones oculto" id="mcCajaGuardarPl" style="margin-top:12px">
+      <button id="mcGuardarPl">📋 Guardar como plantilla</button>
+    </div>
     <div class="acciones">
       <button class="peligro oculto" id="mcBorrar">🗑 Borrar culto</button>
       <button id="mcCancelar">Cancelar</button>
@@ -291,12 +435,42 @@ Santo, santo…"></textarea>
   </div>
 </div>
 
+<!-- ======= VENTANA: fin de semana ======= -->
+<div class="modal oculto" id="modalFinde">
+  <div class="hoja">
+    <h3>📅 Crear fin de semana</h3>
+    <div class="tenue" style="font-size:14px">Crea los cultos de viernes, sábado y domingo de una vez, cada uno con su plantilla.</div>
+    <div id="mfDias"></div>
+    <div class="acciones">
+      <button id="mfCancelar">Cancelar</button>
+      <button class="prim" id="mfGuardar">✔ Crear cultos</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= VENTANA: ajustes ======= -->
+<div class="modal oculto" id="modalAjustes">
+  <div class="hoja">
+    <h3>⚙️ Ajustes</h3>
+    <label>Mi nombre (como aparece en “Quién la canta”)</label>
+    <input id="ajNombre" list="listaCantantes" placeholder="Ej: Hna. Ana" autocomplete="off">
+    <div class="acciones"><a href="musicos.html" class="boton">🎸 Abrir la vista de músicos</a></div>
+    <div class="ayuda">La Biblia es la <b>Reina-Valera 1909</b> (dominio público). Se baja la primera vez que la abres y después funciona sin internet.</div>
+    <div class="acciones">
+      <a href="#salir" class="boton peligro">Salir del grupo</a>
+      <button class="prim" id="ajGuardar">✔ Listo</button>
+    </div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script src="comun.js"></script>
+<script src="biblia.js"></script>
 <script type="module">
 import './nube.js';
 
-let canciones = [], estado = {}, prog = { cultos: [], turnos: [] }, filtro = 'cultos', verPasados = false;
+let canciones = [], estado = {}, prog = { cultos: [], turnos: [], participaciones: [], bloques: [], plantillas: [] };
+let tab = 'inicio', equipoModo = 'hermanos', verPasados = false;
 let actual = null, pasos = 0, latino, tamLetra = 16, pantalla = 'lista', hermanoSel = null, ordenando = null;
 const $ = id => document.getElementById(id);
 
@@ -307,20 +481,40 @@ const esMio = nombre => !!miNombre && !!nombre && normalizar(nombre).includes(no
 const inicial = n => escaparHTML(String(n).replace(/^(hn[oa]s?\.?|herman[oa]s?|pastor[a]?)\s+/i, '').charAt(0).toUpperCase() || '?');
 function actualizarNombres() { $('listaCantantes').innerHTML = nombresHermanos(canciones, prog).map(n => `<option value="${escaparHTML(n)}">`).join(''); }
 const cancionDe = id => canciones.find(c => c.id === id);
+const hay = id => !!cancionDe(id);
+const items = cuId => itemsDe(prog, cuId, hay);
+const isoDe = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const fechaDe = iso => new Date(iso + 'T12:00:00');
+const sumarDias = (iso, n) => { const d = fechaDe(iso); d.setDate(d.getDate() + n); return isoDe(d); };
+// números 1, 2, 3… solo para las alabanzas
+const numerar = l => { let n = 0; return new Map(l.filter(x => x.es === 'turno').map(x => [x.id, ++n])); };
+const esMioItem = x => x.es === 'turno' ? esMio(x.cantante) : esMio(x.responsable);
+const sirveEn = cu => items(cu.id).some(esMioItem) || participacionesDe(prog, cu.id).some(x => esMio(x.nombre));
 
 function mostrar(p) {
   pantalla = p;
   for (const s of ['Lista', 'Ver', 'Editor']) $('pantalla' + s).classList.toggle('oculto', s.toLowerCase() !== p);
   $('btnAtras').classList.toggle('oculto', p === 'lista');
-  $('tituloBarra').textContent = p === 'lista' ? '🎵 Alabanzas MMM' : p === 'ver' ? 'Alabanza' : (actual ? 'Editar alabanza' : 'Nueva alabanza');
+  $('logo').classList.toggle('oculto', p !== 'lista');
+  $('nav').classList.toggle('oculto', p !== 'lista');
+  $('tituloBarra').textContent = p === 'lista' ? 'Alabanzas MMM' : p === 'ver' ? 'Alabanza' : (actual ? 'Editar alabanza' : 'Nueva alabanza');
+  if (bib) pintarBarraBiblia();
   window.scrollTo(0, 0);
 }
 $('btnAtras').onclick = () => {
   if (pantalla === 'editor' && actual) return abrir(actual.id);
   mostrar('lista'); pintarLista();
 };
+function irATab(t) {
+  tab = t; hermanoSel = null; ordenando = null; $('buscar').value = '';
+  $('nav').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.tab === t));
+  if (pantalla !== 'lista') mostrar('lista');
+  window.scrollTo(0, 0);
+  pintarLista();
+}
+$('nav').onclick = e => { const b = e.target.closest('[data-tab]'); if (b) irATab(b.dataset.tab); };
 
-// ---------- Lista ----------
+// ---------- filas ----------
 function filaCancion(c) {
   const enCultos = prog.turnos.filter(t => t.cancionId === c.id).length;
   return `<div class="tarjeta cancion" data-id="${c.id}">
@@ -334,34 +528,43 @@ function filaCancion(c) {
     </div>`;
 }
 function tarjetaCulto(cu, soloMios) {
-  let ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
-  const numero = new Map(ts.map((t, i) => [t.id, i + 1]));   // número general del culto (1, 2, 3…)
-  if (soloMios) ts = ts.filter(t => esMio(t.cantante));
+  let l = items(cu.id);
+  const numero = numerar(l);
+  if (soloMios) l = l.filter(esMioItem);
   const esHoy = cu.fecha === hoyISO(), ordenar = ordenando === cu.id && !soloMios;
-  const fila = (t, pos, total) => {
-    const c = cancionDe(t.cancionId), tono = tonoTurno(t, c);
-    const botones = soloMios ? '' : ordenar
-      ? `<button class="mini" data-mover="${t.id}" data-dir="-1" ${pos === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button><button class="mini" data-mover="${t.id}" data-dir="1" ${pos === total - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>`
-      : `<button class="mini" data-editar-turno="${t.id}" title="Cambiar quién canta, el tono o la parte">✏️</button><button class="mini" data-quitar-turno="${t.id}" title="Quitar de este culto">✖</button>`;
-    return `<div class="turno ${esMio(t.cantante) ? 'mio' : ''} ${ordenar ? 'ordenando' : ''}" ${ordenar ? '' : `data-id="${c.id}"`}>
-      <span class="n">${numero.get(t.id)}</span>
+  const nAlab = numero.size;
+  const fila = (x, pos, total) => {
+    const flechas = `<button class="mini" data-mover="${x.id}" data-dir="-1" ${pos === 0 ? 'disabled style="opacity:.3"' : ''}>▲</button><button class="mini" data-mover="${x.id}" data-dir="1" ${pos === total - 1 ? 'disabled style="opacity:.3"' : ''}>▼</button>`;
+    if (x.es === 'bloque') {
+      const k = claseDe(x);
+      const sub = [x.responsable && '👤 ' + x.responsable, x.clase === 'versiculo' && x.ref && x.ref !== x.titulo && x.ref, x.nota].filter(Boolean).map(escaparHTML).join(' · ');
+      const botones = soloMios ? '' : ordenar ? flechas : `<button class="mini" data-editar-bloque="${x.id}" title="Cambiar">✏️</button><button class="mini" data-quitar-bloque="${x.id}" title="Quitar">✖</button>`;
+      return `<div class="turno bloque ${ordenar ? 'ordenando' : ''}" ${ordenar || soloMios ? '' : `data-bloque="${x.id}"`}>
+        <span class="n">${k.icono}</span>
+        <div class="info"><div class="tit">${escaparHTML(x.titulo || k.nombre)}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${botones}</div>`;
+    }
+    const c = cancionDe(x.cancionId), tono = tonoTurno(x, c);
+    const botones = soloMios ? '' : ordenar ? flechas
+      : `<button class="mini" data-editar-turno="${x.id}" title="Cambiar quién canta, el tono o la parte">✏️</button><button class="mini" data-quitar-turno="${x.id}" title="Quitar de este culto">✖</button>`;
+    return `<div class="turno ${esMio(x.cantante) ? 'mio' : ''} ${ordenar ? 'ordenando' : ''}" ${ordenar ? '' : `data-id="${c.id}"`}>
+      <span class="n">${numero.get(x.id)}</span>
       <div class="info"><div class="tit">${escaparHTML(c.titulo)}</div>
-        <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${tono ? ' · <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}${t.tono && c.tono && t.tono !== c.tono ? ' <span class="tenue">(original ' + escaparHTML(c.tono) + ')</span>' : ''}</div></div>
+        <div class="sub">🎤 <b>${escaparHTML(x.cantante || c.cantante || '—')}</b>${tono ? ' · <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}${x.tono && c.tono && x.tono !== c.tono ? ' <span class="tenue">(original ' + escaparHTML(c.tono) + ')</span>' : ''}</div></div>
       ${botones}
     </div>`;
   };
-  const cuerpo = ts.length ? partesDe(ts).map(p => `<div class="parte ${p.tipo || 'sin'}">${nombreTipo(p.tipo)} <span>${p.turnos.length}</span></div>` +
-      p.turnos.map((t, k) => fila(t, k, p.turnos.length)).join('')).join('')
-    : `<div class="turno tenue" style="cursor:default">Todavía no hay alabanzas en este culto.</div>`;
+  const cuerpo = l.length ? partesDe(l).map(p => `<div class="parte ${p.tipo || 'sin'}">${nombreTipo(p.tipo)} <span>${p.turnos.length}</span></div>` +
+      p.turnos.map((x, k) => fila(x, k, p.turnos.length)).join('')).join('')
+    : `<div class="turno tenue" style="cursor:default">Todavía no hay nada en este culto.</div>`;
   return `<div class="tarjeta culto ${esHoy ? 'hoy' : ''}">
     <div class="culto-cab">
-      <div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)} · ${turnosDe(prog, cu.id).length} alabanza(s)</small></div>
-      ${soloMios ? '' : `${ts.length > 1 ? `<button class="mini ${ordenar ? 'prim' : ''}" data-ordenar="${cu.id}" title="Cambiar el orden">${ordenar ? '✔ Listo' : '↕ Ordenar'}</button>` : ''}<button class="mini" data-editar-culto="${cu.id}" title="Cambiar fecha, nombre o qué va primero">✏️</button>`}
+      <div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)} · ${nAlab} alabanza(s)</small></div>
+      ${soloMios ? '' : `${l.length > 1 ? `<button class="mini ${ordenar ? 'prim' : ''}" data-ordenar="${cu.id}" title="Cambiar el orden">${ordenar ? '✔ Listo' : '↕ Ordenar'}</button>` : ''}<button class="mini" data-editar-culto="${cu.id}" title="Cambiar fecha, nombre, qué va primero o guardarlo como plantilla">✏️</button>`}
     </div>
-    ${ordenar ? `<div class="ayuda-orden">Usa ▲▼ para cambiar el orden dentro de cada parte. Para pasar una alabanza a Adoración o Coros, toca «✔ Listo» y luego ✏️.</div>` : ''}
+    ${ordenar ? `<div class="ayuda-orden">Usa ▲▼ para cambiar el orden dentro de cada parte. Para pasar algo a otra parte, toca «✔ Listo» y luego ✏️.</div>` : ''}
     ${cuerpo}
     ${ordenar ? '' : equipoHTML(cu, soloMios)}
-    ${soloMios || ordenar ? '' : `<div class="culto-pie"><button data-agregar-a="${cu.id}">＋ Alabanza</button><button data-agregar-hermano="${cu.id}">＋ Hermano</button></div>`}
+    ${soloMios || ordenar ? '' : `<div class="culto-pie"><button data-agregar-a="${cu.id}">＋ Alabanza</button><button data-agregar-bloque="${cu.id}">＋ Bloque</button><button data-agregar-hermano="${cu.id}">＋ Hermano</button></div>`}
   </div>`;
 }
 // quién sirve en el culto: los que tocan/dirigen y los que cantan alguna alabanza
@@ -376,10 +579,119 @@ function equipoHTML(cu, soloMios) {
     ${soloMios ? '' : cantan.map(n => `<span class="chip ${esMio(n) ? 'mio' : ''}" style="padding-right:11px"><b data-hermano="${escaparHTML(n)}">${escaparHTML(n)}</b><span>Canta</span></span>`).join('')}
   </div>`;
 }
+
+// ---------- INICIO ----------
+let modoHoy = leerLocal('modoHoy') === 'acordes' ? 'acordes' : 'letra';   // letra = sin partitura · acordes = con partitura
+let tamHoy = +leerLocal('tamHoy') || 20, latinoHoy, diaSel = hoyISO();
+function saludo() { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches'; }
+function letraLimpiaHTML(texto) {
+  return analizarLetra(texto).map(sec => {
+    const lineas = sec.lineas.map(l => String(l.letra || '').replace(/\s{2,}/g, ' ').trim()).filter(Boolean);
+    if (!lineas.length) return '';
+    return `<div class="estrofa">${sec.etiqueta ? `<div class="etq">${escaparHTML(sec.etiqueta)}</div>` : ''}${lineas.map(escaparHTML).join('<br>')}</div>`;
+  }).join('') || '<span class="tenue">Sin letra</span>';
+}
+function bloqueHoy(cu, conAc) {
+  const l = items(cu.id), num = numerar(l);
+  const ps = participacionesDe(prog, cu.id);
+  const equipo = ps.map(x => `<span class="chip ${esMio(x.nombre) ? 'mio' : ''}" style="padding-right:11px"><b>${escaparHTML(x.nombre)}</b><span>${escaparHTML(x.rol || '')}</span></span>`).join('');
+  let h = `<div class="tarjeta hoy-cab">
+    <b>${escaparHTML(cu.nombre)}</b>
+    <span class="tenue">${escaparHTML(fechaBonita(cu.fecha))} · ${num.size} alabanza(s)</span>
+    ${equipo ? `<div class="eq">${equipo}</div>` : ''}
+    ${l.length > 1 ? `<div class="hoy-indice">${l.map(x => x.es === 'bloque'
+      ? `<a href="#" data-ir="${x.id}" class="bl ${esMio(x.responsable) ? 'mio' : ''}"><span class="n">${claseDe(x).icono}</span><span>${escaparHTML(x.titulo || claseDe(x).nombre)}${x.responsable ? ' — ' + escaparHTML(x.responsable) : ''}</span></a>`
+      : `<a href="#" data-ir="${x.id}" class="${esMio(x.cantante) ? 'mio' : ''}"><span class="n">${num.get(x.id)}</span><span>${escaparHTML(cancionDe(x.cancionId).titulo)}${x.cantante ? ' — ' + escaparHTML(x.cantante) : ''}</span></a>`).join('')}</div>` : ''}
+    <div class="acciones" style="margin-top:10px"><button class="chico" data-editar-culto="${cu.id}">✏️ Culto</button><button class="chico" data-agregar-a="${cu.id}">＋ Alabanza</button><button class="chico" data-agregar-bloque="${cu.id}">＋ Bloque</button></div>
+  </div>`;
+  if (!l.length) return h + '<div class="tarjeta tenue" style="margin-bottom:14px">Todavía no hay nada en este culto.</div>';
+  for (const p of partesDe(l)) {
+    h += `<div class="hoy-parte ${p.tipo || ''}">${nombreTipo(p.tipo)}</div>`;
+    for (const x of p.turnos) {
+      if (x.es === 'bloque') {
+        const k = claseDe(x);
+        const cuerpo = x.texto ? `<div class="cuerpo" style="font-size:${Math.max(14, tamHoy - 4)}px;line-height:1.55;white-space:pre-line">${escaparHTML(x.texto)}</div>` : '';
+        h += `<div class="tarjeta hoy-cancion hoy-bloque ${esMio(x.responsable) ? 'mio' : ''}" id="hoy-${x.id}">
+          <div class="cab"><span class="n">${k.icono}</span>
+            <div class="info"><div class="tit" data-bloque="${x.id}">${escaparHTML(x.titulo || k.nombre)}</div>
+              <div class="sub">${[x.responsable && '👤 ' + x.responsable, x.clase === 'versiculo' && x.ref !== x.titulo && x.ref, x.nota].filter(Boolean).map(escaparHTML).join(' · ') || escaparHTML(k.nombre)}</div></div>
+          </div>${cuerpo}</div>`;
+        continue;
+      }
+      const c = cancionDe(x.cancionId), tono = tonoTurno(x, c);
+      const pasos = semitonos(c.tono, tono) || 0;
+      const tonoVer = conAc && tono ? (c.tono ? transponerAcorde(c.tono, pasos, latinoHoy) : tono) : tono;
+      const cuerpo = conAc
+        ? `<div class="vista-acordes">${analizarLetra(c.letra).map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latinoHoy)}</div>`).join('') || '<span class="tenue">Sin letra</span>'}</div>${c.notas ? `<div class="notas">📝 ${escaparHTML(c.notas)}</div>` : ''}`
+        : `<div class="letra-limpia">${letraLimpiaHTML(c.letra)}</div>`;
+      h += `<div class="tarjeta hoy-cancion ${esMio(x.cantante) ? 'mio' : ''}" id="hoy-${x.id}">
+        <div class="cab"><span class="n">${num.get(x.id)}</span>
+          <div class="info"><div class="tit" data-id="${c.id}">${escaparHTML(c.titulo)}</div>
+            <div class="sub">🎤 <b>${escaparHTML(x.cantante || c.cantante || '—')}</b>${c.autor ? ' · ' + escaparHTML(c.autor) : ''}</div></div>
+          ${tonoVer ? `<span class="tonoG">${escaparHTML(tonoVer)}</span>` : ''}
+        </div>
+        <div class="cuerpo" style="font-size:${conAc ? Math.max(12, tamHoy - 4) : tamHoy}px">${cuerpo}</div>
+      </div>`;
+    }
+  }
+  return h;
+}
+function pintarInicio(cont) {
+  const hoy = hoyISO(), o = cultosOrdenados(prog);
+  const nombreCorto = miNombre ? miNombre.replace(/^(hn[oa]s?\.?|herman[oa]s?)\s+/i, '') : '';
+  let h = `<div class="saludo"><h2>${saludo()}${nombreCorto ? ', ' + escaparHTML(nombreCorto) : ''}</h2>
+    <div class="fecha">${escaparHTML(fechaDe(hoy).toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^./, m => m.toUpperCase()))}</div></div>`;
+  // mi próximo servicio
+  if (!miNombre) h += `<div class="tarjeta servicio" data-poner-nombre="1"><b class="g">¿Quién eres?</b><span class="tenue">Escribe tu nombre para ver aquí cuándo te toca servir.</span></div>`;
+  else {
+    const mio = o.proximos.find(sirveEn);
+    if (!mio) h += `<div class="tarjeta servicio" style="cursor:default"><b class="g">No tienes servicio asignado</b><span class="tenue">No estás en los próximos cultos.</span></div>`;
+    else {
+      const roles = participacionesDe(prog, mio.id).filter(x => esMio(x.nombre)).map(x => x.rol || 'Participa');
+      const cantos = turnosDe(prog, mio.id).filter(t => esMio(t.cantante) && hay(t.cancionId)).map(t => '🎤 ' + cancionDe(t.cancionId).titulo + (tonoTurno(t, cancionDe(t.cancionId)) ? ' (' + tonoTurno(t, cancionDe(t.cancionId)) + ')' : ''));
+      const bls = (prog.bloques || []).filter(b => b.cultoId === mio.id && esMio(b.responsable)).map(b => claseDe(b).icono + ' ' + (b.titulo || claseDe(b).nombre));
+      h += `<div class="tarjeta servicio" data-ir-dia="${mio.fecha}"><small class="tenue">TU PRÓXIMO SERVICIO</small>
+        <b class="g">${escaparHTML(fechaBonita(mio.fecha))}</b><span class="tenue">${escaparHTML(mio.nombre)}</span>
+        <div class="eq">${roles.concat(cantos, bls).map(r => `<span class="chip mio" style="padding-right:11px"><b>${escaparHTML(r)}</b></span>`).join('')}</div></div>`;
+    }
+  }
+  // tira de la semana
+  const d0 = fechaDe(diaSel), lunes = sumarDias(diaSel, -((d0.getDay() + 6) % 7));
+  const dias = [...Array(7)].map((_, i) => sumarDias(lunes, i));
+  const conCulto = new Set(prog.cultos.map(c => c.fecha));
+  h += `<div class="titulo-sec"><h3>${dias.includes(hoy) ? 'Esta semana' : escaparHTML(fechaDe(lunes).toLocaleDateString('es', { day: 'numeric', month: 'short' })) + ' – ' + escaparHTML(fechaDe(dias[6]).toLocaleDateString('es', { day: 'numeric', month: 'short' }))}</h3><a data-ver-mes="1">Ver todos los cultos</a></div>
+    <div class="semana-cab"><button class="flecha" data-semana="-7">‹</button><div class="semana">${dias.map(d => {
+      const f = fechaDe(d);
+      return `<div class="dia ${d === diaSel ? 'sel' : ''} ${d === hoy ? 'hoy' : ''}" data-dia="${d}"><small>${f.toLocaleDateString('es', { weekday: 'short' }).replace('.', '').slice(0, 3)}</small><b>${f.getDate()}</b><div class="pt ${conCulto.has(d) ? 'si' : ''}"></div></div>`;
+    }).join('')}</div><button class="flecha" data-semana="7">›</button></div>`;
+  // lo del día elegido
+  const delDia = o.proximos.concat(o.pasados).filter(cu => cu.fecha === diaSel);
+  const conAc = modoHoy === 'acordes';
+  h += `<div class="titulo-sec"><h3>${escaparHTML(fechaBonita(diaSel))}</h3></div>`;
+  if (delDia.length) {
+    h += `<div class="modo-hoy">
+        <button data-modo="letra" class="${conAc ? '' : 'sel'}">🎤 Sin partitura<small>Solo la letra · para los que cantan</small></button>
+        <button data-modo="acordes" class="${conAc ? 'sel' : ''}">🎹 Con partitura<small>Letra con acordes · para los músicos</small></button>
+      </div>
+      <div class="herram hoy-herr">
+        ${conAc ? `<button class="chico" data-notacion="1">${latinoHoy === undefined ? 'Do/C' : latinoHoy ? 'Do' : 'C'}</button>` : ''}
+        <span style="flex:1"></span>
+        <button class="chico" data-tam="-2">A−</button><button class="chico" data-tam="2">A+</button>
+      </div>` + delDia.map(cu => bloqueHoy(cu, conAc)).join('');
+  } else {
+    const sig = o.proximos.find(cu => cu.fecha > diaSel);
+    h += `<div class="tarjeta vacio">No hay culto este día.<br><br><button class="prim" data-crear-dia="${diaSel}">＋ Crear culto este día</button>
+      ${sig ? `<br><br><a href="#" data-ir-dia="${sig.fecha}">Ver el próximo: ${escaparHTML(fechaBonita(sig.fecha, true))} · ${escaparHTML(sig.nombre)}</a>` : ''}</div>`;
+  }
+  cont.innerHTML = h;
+}
+
+// ---------- EQUIPO ----------
 function pintarHermanos(cont) {
   const nombres = nombresHermanos(canciones, prog);
   const hoy = hoyISO();
-  const diasDe = n => prog.cultos.filter(cu => cu.fecha >= hoy && (participacionesDe(prog, cu.id).some(x => mismoNombre(x.nombre, n)) || turnosDe(prog, cu.id).some(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId))))
+  const diasDe = n => prog.cultos.filter(cu => cu.fecha >= hoy && (participacionesDe(prog, cu.id).some(x => mismoNombre(x.nombre, n)) || turnosDe(prog, cu.id).some(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId))
+      || (prog.bloques || []).some(b => b.cultoId === cu.id && mismoNombre(b.responsable, n))))
     .sort((a, b) => a.fecha.localeCompare(b.fecha));
   if (hermanoSel) {
     const n = hermanoSel, dias = diasDe(n);
@@ -393,9 +705,11 @@ function pintarHermanos(cont) {
       ${dias.map(cu => {
         const roles = participacionesDe(prog, cu.id).filter(x => mismoNombre(x.nombre, n));
         const ts = turnosDe(prog, cu.id).filter(t => mismoNombre(t.cantante, n) && cancionDe(t.cancionId));
+        const bs = (prog.bloques || []).filter(b => b.cultoId === cu.id && mismoNombre(b.responsable, n));
         return `<div class="tarjeta culto"><div class="culto-cab"><div class="f"><b>${escaparHTML(fechaBonita(cu.fecha))}</b><small>${escaparHTML(cu.nombre)}</small></div></div>
           ${roles.length ? `<div class="equipo">${roles.map(x => `<span class="chip"><b>${escaparHTML(x.rol || 'Participa')}</b><button data-quitar-part="${x.id}" title="Quitar">✖</button></span>`).join('')}</div>` : ''}
           ${ts.map(t => { const c = cancionDe(t.cancionId), tono = tonoTurno(t, c); return `<div class="turno" data-id="${c.id}"><span class="n">🎤</span><div class="info"><div class="tit">${escaparHTML(c.titulo)}</div><div class="sub">${tono ? 'Tono <span class="tonoT">' + escaparHTML(tono) + '</span>' : ''}</div></div></div>`; }).join('')}
+          ${bs.map(b => `<div class="turno bloque" data-bloque="${b.id}"><span class="n">${claseDe(b).icono}</span><div class="info"><div class="tit">${escaparHTML(b.titulo || claseDe(b).nombre)}</div></div></div>`).join('')}
         </div>`;
       }).join('') || '<div class="tarjeta tenue">No tiene días programados.</div>'}
       <div class="seccion-t">🎵 Alabanzas que canta</div>
@@ -419,137 +733,110 @@ function pintarHermanos(cont) {
     + `<div class="acciones"><button id="nuevoHermano">＋ Poner a un hermano en un culto</button></div>`;
   $('nuevoHermano').onclick = () => abrirModalPart({ nombre: $('buscar').value.trim() });
 }
+function pintarMias(cont) {
+  if (!miNombre) { cont.innerHTML = `<div class="vacio">Escribe tu nombre para ver qué días te toca servir.<br><br><button class="prim" data-poner-nombre="1">🙋 Escribir mi nombre</button></div>`; return; }
+  const o = cultosOrdenados(prog);
+  const conMios = o.proximos.filter(sirveEn);
+  const mias = canciones.filter(c => esMio(c.cantante)).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  cont.innerHTML = `<div class="tenue" style="margin-bottom:10px">Hola <b>${escaparHTML(miNombre)}</b> · <a href="#" data-poner-nombre="1">no soy yo</a></div>
+    <div class="seccion-t">📅 Días que me toca servir</div>
+    ${conMios.length ? conMios.map(c => tarjetaCulto(c, true)).join('') : '<div class="tarjeta tenue" style="margin-bottom:10px">No estás en los próximos cultos.</div>'}
+    <div class="seccion-t">🎵 Mis alabanzas (${mias.length})</div>
+    ${mias.map(filaCancion).join('') || '<div class="tenue">Todavía no has subido alabanzas.</div>'}`;
+}
 
-// ---------- HOY: lo que se canta y se toca hoy ----------
-let modoHoy = leerLocal('modoHoy') === 'acordes' ? 'acordes' : 'letra';   // letra = sin partitura · acordes = con partitura
-let tamHoy = +leerLocal('tamHoy') || 20, latinoHoy, hoyOtro = null;
-function letraLimpiaHTML(texto) {
-  return analizarLetra(texto).map(sec => {
-    const lineas = sec.lineas.map(l => String(l.letra || '').replace(/\s{2,}/g, ' ').trim()).filter(Boolean);
-    if (!lineas.length) return '';
-    return `<div class="estrofa">${sec.etiqueta ? `<div class="etq">${escaparHTML(sec.etiqueta)}</div>` : ''}${lineas.map(escaparHTML).join('<br>')}</div>`;
-  }).join('') || '<span class="tenue">Sin letra</span>';
-}
-function bloqueHoy(cu, conAc, titulo) {
-  const ts = turnosDe(prog, cu.id).filter(t => cancionDe(t.cancionId));
-  const num = new Map(ts.map((t, i) => [t.id, i + 1]));
-  const ps = participacionesDe(prog, cu.id);
-  const equipo = ps.map(x => `<span class="chip ${esMio(x.nombre) ? 'mio' : ''}" style="padding-right:11px"><b>${escaparHTML(x.nombre)}</b><span>${escaparHTML(x.rol || '')}</span></span>`).join('');
-  let h = `<div class="tarjeta hoy-cab">
-    <small class="tenue">${titulo}</small>
-    <b>${escaparHTML(fechaBonita(cu.fecha))}</b>
-    <span class="tenue">${escaparHTML(cu.nombre)} · ${ts.length} alabanza(s)</span>
-    ${equipo ? `<div class="eq">${equipo}</div>` : ''}
-    ${ts.length > 1 ? `<div class="hoy-indice">${ts.map(t => { const c = cancionDe(t.cancionId); return `<a href="#" data-ir="${t.id}" class="${esMio(t.cantante) ? 'mio' : ''}"><span class="n">${num.get(t.id)}</span><span>${escaparHTML(c.titulo)}${t.cantante ? ' — ' + escaparHTML(t.cantante) : ''}</span></a>`; }).join('')}</div>` : ''}
-  </div>`;
-  if (!ts.length) return h + '<div class="tarjeta tenue">Todavía no hay alabanzas en este culto.</div>';
-  for (const p of partesDe(ts)) {
-    h += `<div class="hoy-parte ${p.tipo || ''}">${nombreTipo(p.tipo)}</div>`;
-    for (const t of p.turnos) {
-      const c = cancionDe(t.cancionId), tono = tonoTurno(t, c);
-      const pasos = semitonos(c.tono, tono) || 0;
-      const tonoVer = conAc && tono ? (c.tono ? transponerAcorde(c.tono, pasos, latinoHoy) : tono) : tono;
-      const cuerpo = conAc
-        ? `<div class="vista-acordes">${analizarLetra(c.letra).map(s => `<div class="sec">${htmlSeccionAcordes(s, pasos, latinoHoy)}</div>`).join('') || '<span class="tenue">Sin letra</span>'}</div>${c.notas ? `<div class="notas">📝 ${escaparHTML(c.notas)}</div>` : ''}`
-        : `<div class="letra-limpia">${letraLimpiaHTML(c.letra)}</div>`;
-      h += `<div class="tarjeta hoy-cancion ${esMio(t.cantante) ? 'mio' : ''}" id="hoy-${t.id}">
-        <div class="cab"><span class="n">${num.get(t.id)}</span>
-          <div class="info"><div class="tit" data-id="${c.id}">${escaparHTML(c.titulo)}</div>
-            <div class="sub">🎤 <b>${escaparHTML(t.cantante || c.cantante || '—')}</b>${c.autor ? ' · ' + escaparHTML(c.autor) : ''}</div></div>
-          ${tonoVer ? `<span class="tonoG">${escaparHTML(tonoVer)}</span>` : ''}
-        </div>
-        <div class="cuerpo" style="font-size:${conAc ? Math.max(12, tamHoy - 4) : tamHoy}px">${cuerpo}</div>
-      </div>`;
-    }
+// ---------- CULTOS ----------
+function pintarCultos(cont) {
+  const o = cultosOrdenados(prog);
+  let h = `<div class="acciones" style="margin:0 0 14px"><button class="prim" id="btnNuevoCulto">＋ Nuevo culto</button><button id="btnFinde">📅 Fin de semana</button></div>`;
+  h += o.proximos.length ? o.proximos.map(c => tarjetaCulto(c)).join('') : '<div class="vacio">No hay cultos programados.</div>';
+  const pls = prog.plantillas || [];
+  h += `<div class="seccion-t">📋 Plantillas</div>` + (pls.length ? pls.map(p => `<div class="tarjeta hermano" style="cursor:default"><div class="avatar">📋</div>
+      <div class="info"><b>${escaparHTML(p.nombre)}</b><div class="sub">${escaparHTML(p.cultoNombre || '—')} · ${p.bloques.length} bloque(s) · ${p.equipo.length} hermano(s)</div></div>
+      <button class="mini" data-usar-pl="${p.id}">Usar</button><button class="mini" data-borrar-pl="${p.id}" title="Borrar plantilla">✖</button></div>`).join('')
+    : '<div class="ayuda">Para crear una plantilla: arma un culto con sus bloques (oración, ofrenda, predicación…) y su equipo, toca ✏️ y luego «📋 Guardar como plantilla». Después podrás crear cultos iguales con un toque.</div>');
+  if (o.pasados.length) {
+    h += `<div class="seccion-t" style="cursor:pointer" id="togglePasados">${verPasados ? '▾' : '▸'} Cultos anteriores (${o.pasados.length})</div>`;
+    if (verPasados) h += o.pasados.map(c => tarjetaCulto(c)).join('');
   }
-  return h;
-}
-function pintarHoy(cont) {
-  const o = cultosOrdenados(prog), hoy = hoyISO();
-  const deHoy = o.proximos.filter(cu => cu.fecha === hoy);
-  const sig = o.proximos.find(cu => cu.fecha > hoy);
-  const conAc = modoHoy === 'acordes';
-  let h = `<div class="modo-hoy">
-      <button data-modo="letra" class="${conAc ? '' : 'sel'}">🎤 Sin partitura<small>Solo la letra · para los que cantan</small></button>
-      <button data-modo="acordes" class="${conAc ? 'sel' : ''}">🎹 Con partitura<small>Letra con acordes · para los músicos</small></button>
-    </div>
-    <div class="herram hoy-herr">
-      ${conAc ? `<button class="chico" data-notacion="1">${latinoHoy === undefined ? 'Do/C' : latinoHoy ? 'Do' : 'C'}</button>` : ''}
-      <span style="flex:1"></span>
-      <button class="chico" data-tam="-2">A−</button><button class="chico" data-tam="2">A+</button>
-    </div>`;
-  if (deHoy.length) h += deHoy.map(cu => bloqueHoy(cu, conAc, '⭐ HOY')).join('');
-  else if (hoyOtro && sig && hoyOtro === sig.id) h += `<div class="tenue" style="margin-bottom:8px">Hoy no hay culto. Este es el próximo, para ensayar:</div>` + bloqueHoy(sig, conAc, '📅 PRÓXIMO CULTO');
-  else h += `<div class="vacio">Hoy no hay culto programado.${sig ? `<br>El próximo es <b>${escaparHTML(fechaBonita(sig.fecha))}</b> · ${escaparHTML(sig.nombre)}<br><br><button class="prim" data-ver-proximo="${sig.id}">Ver el próximo para ensayar</button>` : ''}</div>`;
   cont.innerHTML = h;
-}
-function clicHoy(e) {
-  const b = e.target.closest('[data-modo],[data-tam],[data-notacion],[data-ver-proximo],[data-ir]');
-  if (!b) return false;
-  e.preventDefault();
-  if (b.dataset.modo) { modoHoy = b.dataset.modo; guardarLocal('modoHoy', modoHoy); }
-  else if (b.dataset.tam) { tamHoy = Math.min(40, Math.max(12, tamHoy + +b.dataset.tam)); guardarLocal('tamHoy', tamHoy); }
-  else if (b.dataset.notacion) latinoHoy = latinoHoy === undefined ? true : latinoHoy ? false : undefined;
-  else if (b.dataset.verProximo) hoyOtro = b.dataset.verProximo;
-  else if (b.dataset.ir) { const el = $('hoy-' + b.dataset.ir); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return true; }
-  pintarLista();
-  return true;
+  $('btnNuevoCulto').onclick = () => abrirModalCulto(null);
+  $('btnFinde').onclick = abrirModalFinde;
+  if ($('togglePasados')) $('togglePasados').onclick = () => { verPasados = !verPasados; pintarLista(); };
 }
 
 function pintarLista() {
-  const q = normalizar($('buscar').value);
   const cont = $('lista');
-  $('cajaBuscar').classList.toggle('oculto', !(filtro === 'todas' || (filtro === 'hermanos' && !hermanoSel)));
-  $('buscar').placeholder = filtro === 'hermanos' ? 'Buscar hermano por nombre…' : 'Buscar alabanza, hermano o letra…';
+  const conBuscador = tab === 'canciones' || (tab === 'equipo' && equipoModo === 'hermanos' && !hermanoSel);
+  $('cajaBuscar').classList.toggle('oculto', !conBuscador);
+  $('buscar').placeholder = tab === 'equipo' ? 'Buscar hermano por nombre…' : 'Buscar alabanza, hermano o letra…';
+  $('btnNueva').classList.toggle('oculto', tab !== 'canciones');
+  $('secBiblia').classList.toggle('oculto', tab !== 'biblia');
+  cont.classList.toggle('oculto', tab === 'biblia');
+  if (tab !== 'biblia') pintarBarraBiblia();
   actualizarNombres();
-  if (filtro === 'hermanos') return pintarHermanos(cont);
-  if (filtro === 'hoy') return pintarHoy(cont);
-  if (filtro === 'cultos') {
-    const o = cultosOrdenados(prog);
-    let h = o.proximos.length ? o.proximos.map(c => tarjetaCulto(c)).join('') : '<div class="vacio">No hay cultos programados.<br>Toca “＋ Nuevo culto” para crear uno.</div>';
-    h += `<div class="acciones" style="margin-top:4px"><button id="btnNuevoCulto">＋ Nuevo culto</button></div>`;
-    if (o.pasados.length) {
-      h += `<div class="seccion-t" style="cursor:pointer" id="togglePasados">${verPasados ? '▾' : '▸'} Cultos anteriores (${o.pasados.length})</div>`;
-      if (verPasados) h += o.pasados.map(c => tarjetaCulto(c)).join('');
-    }
-    cont.innerHTML = h;
-    $('btnNuevoCulto').onclick = () => abrirModalCulto(null);
-    if ($('togglePasados')) $('togglePasados').onclick = () => { verPasados = !verPasados; pintarLista(); };
-  } else if (filtro === 'mias') {
-    if (!miNombre) { cont.innerHTML = `<div class="vacio">Escribe tu nombre para ver qué días te toca cantar.<br><br><button class="prim" id="ponerNombre">🙋 Escribir mi nombre</button></div>`; $('ponerNombre').onclick = pedirNombre; return; }
-    const o = cultosOrdenados(prog);
-    const conMios = o.proximos.filter(cu => turnosDe(prog, cu.id).some(t => esMio(t.cantante) && cancionDe(t.cancionId)) || participacionesDe(prog, cu.id).some(x => esMio(x.nombre)));
-    const mias = canciones.filter(c => esMio(c.cantante)).sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-    cont.innerHTML = `<div class="tenue" style="margin-bottom:10px">Hola <b>${escaparHTML(miNombre)}</b> · <a href="#" id="cambiarNombre">no soy yo</a></div>
-      <div class="seccion-t">📅 Días que me toca servir</div>
-      ${conMios.length ? conMios.map(c => tarjetaCulto(c, true)).join('') : '<div class="tarjeta tenue" style="margin-bottom:10px">No estás en los próximos cultos.</div>'}
-      <div class="seccion-t">🎵 Mis alabanzas (${mias.length})</div>
-      ${mias.map(filaCancion).join('') || '<div class="tenue">Todavía no has subido alabanzas.</div>'}`;
-    $('cambiarNombre').onclick = e => { e.preventDefault(); pedirNombre(); };
-  } else {
-    let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
-    if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante + ' ' + c.autor + ' ' + c.letra).includes(q));
-    cont.innerHTML = l.length ? l.map(filaCancion).join('') : '<div class="vacio">No hay alabanzas todavía.<br>Toca “＋ Nueva alabanza”.</div>';
+  if (tab === 'biblia') { cont.innerHTML = ''; return pintarBiblia(); }
+  if (tab === 'inicio') return pintarInicio(cont);
+  if (tab === 'cultos') return pintarCultos(cont);
+  if (tab === 'equipo') {
+    const seg = `<div class="segm"><button data-eq="hermanos" class="${equipoModo === 'hermanos' ? 'sel' : ''}">👥 Hermanos</button><button data-eq="mias" class="${equipoModo === 'mias' ? 'sel' : ''}">🙋 Lo que me toca</button></div>`;
+    cont.innerHTML = (hermanoSel ? '' : seg) + '<div id="eqCont"></div>';
+    if (equipoModo === 'mias') pintarMias($('eqCont')); else pintarHermanos($('eqCont'));
+    return;
   }
+  // canciones
+  const q = normalizar($('buscar').value);
+  let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
+  if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante + ' ' + c.autor + ' ' + c.letra).includes(q));
+  cont.innerHTML = `<div class="tenue" style="margin:0 4px 10px">${canciones.length} alabanza(s)</div>` + (l.length ? l.map(filaCancion).join('') : '<div class="vacio">No hay alabanzas.<br>Toca “＋ Nueva alabanza”.</div>');
 }
+
+// ---------- clics en la lista ----------
+async function guardarItem(x) { return x.es === 'bloque' ? API.guardarBloque(x) : API.guardarTurno(x); }
 $('lista').onclick = async e => {
-  if (filtro === 'hoy' && clicHoy(e)) return;
+  const a = e.target.closest('[data-modo],[data-tam],[data-notacion],[data-ir],[data-dia],[data-semana],[data-crear-dia],[data-ir-dia],[data-ver-mes],[data-poner-nombre],[data-eq],[data-usar-pl],[data-borrar-pl]');
+  if (a) {
+    e.preventDefault();
+    const d = a.dataset;
+    if (d.modo) { modoHoy = d.modo; guardarLocal('modoHoy', modoHoy); }
+    else if (d.tam) { tamHoy = Math.min(40, Math.max(12, tamHoy + +d.tam)); guardarLocal('tamHoy', tamHoy); }
+    else if (d.notacion) latinoHoy = latinoHoy === undefined ? true : latinoHoy ? false : undefined;
+    else if (d.ir) { const el = $('hoy-' + d.ir); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    else if (d.dia) diaSel = d.dia;
+    else if (d.semana) diaSel = sumarDias(diaSel, +d.semana);
+    else if (d.irDia) { diaSel = d.irDia; if (tab !== 'inicio') return irATab('inicio'); }
+    else if (d.crearDia) return abrirModalCulto(null, null, d.crearDia);
+    else if (d.verMes) return irATab('cultos');
+    else if (d.ponerNombre) return pedirNombre();
+    else if (d.eq) { equipoModo = d.eq; hermanoSel = null; }
+    else if (d.usarPl) return abrirModalCulto(null, null, null, d.usarPl);
+    else if (d.borrarPl) {
+      const p = prog.plantillas.find(x => x.id === d.borrarPl);
+      if (p && confirm(`¿Borrar la plantilla “${p.nombre}”?\n(Los cultos ya creados no cambian)`)) { await API.borrarPlantilla(p.id); prog = await API.programa(); aviso('Plantilla borrada'); }
+    }
+    return pintarLista();
+  }
   const b = e.target.closest('button');
   if (b && b.dataset.agregarA) return abrirModalTurno({ cultoId: b.dataset.agregarA });
+  if (b && b.dataset.agregarBloque) return abrirModalBloque({ cultoId: b.dataset.agregarBloque });
   if (b && b.dataset.editarCulto) return abrirModalCulto(prog.cultos.find(c => c.id === b.dataset.editarCulto));
   if (b && b.dataset.ordenar) { ordenando = ordenando === b.dataset.ordenar ? null : b.dataset.ordenar; return pintarLista(); }
   if (b && b.dataset.mover) {
-    const t = prog.turnos.find(x => x.id === b.dataset.mover); if (!t) return;
-    const cambios = moverTurno(turnosDe(prog, t.cultoId).filter(x => cancionDe(x.cancionId)), t.id, +b.dataset.dir);
+    const todo = prog.turnos.concat(prog.bloques || []);
+    const x = todo.find(y => y.id === b.dataset.mover); if (!x) return;
+    const cambios = moverTurno(items(x.cultoId), x.id, +b.dataset.dir);
     if (!cambios.length) return;
-    try {
-      await Promise.all(cambios.map(x => API.guardarTurno(x)));
-      prog = await API.programa(); pintarLista();
-    } catch (e2) { aviso(e2.message, true); }
+    try { await Promise.all(cambios.map(guardarItem)); prog = await API.programa(); pintarLista(); } catch (e2) { aviso(e2.message, true); }
     return;
   }
   if (b && b.dataset.agregarHermano) return abrirModalPart({ cultoId: b.dataset.agregarHermano });
   if (b && b.dataset.editarTurno) { const t = prog.turnos.find(x => x.id === b.dataset.editarTurno); return t && abrirModalTurno({ turno: t }); }
+  if (b && b.dataset.editarBloque) { const x = prog.bloques.find(y => y.id === b.dataset.editarBloque); return x && abrirModalBloque({ bloque: x }); }
+  if (b && b.dataset.quitarBloque) {
+    const x = prog.bloques.find(y => y.id === b.dataset.quitarBloque);
+    if (x && confirm(`¿Quitar “${x.titulo || claseDe(x).nombre}” de este culto?`)) { await API.borrarBloque(x.id); prog = await API.programa(); pintarLista(); aviso('Quitado del culto'); }
+    return;
+  }
   if (b && b.dataset.quitarPart) {
     const x = prog.participaciones.find(y => y.id === b.dataset.quitarPart);
     if (x && confirm(`¿Quitar a ${x.nombre} (${x.rol || 'participa'}) de este culto?`)) {
@@ -558,7 +845,7 @@ $('lista').onclick = async e => {
     return;
   }
   const h = e.target.closest('[data-hermano]');
-  if (h) { filtro = 'hermanos'; hermanoSel = h.dataset.hermano; $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x.dataset.f === 'hermanos')); window.scrollTo(0, 0); return pintarLista(); }
+  if (h) { tab = 'equipo'; equipoModo = 'hermanos'; hermanoSel = h.dataset.hermano; $('nav').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x.dataset.tab === 'equipo')); window.scrollTo(0, 0); return pintarLista(); }
   if (b && b.dataset.quitarTurno) {
     const t = prog.turnos.find(x => x.id === b.dataset.quitarTurno), c = t && cancionDe(t.cancionId);
     if (t && confirm(`¿Quitar “${c ? c.titulo : ''}” de este culto?\n(La alabanza no se borra)`)) {
@@ -566,20 +853,114 @@ $('lista').onclick = async e => {
     }
     return;
   }
+  const bl = e.target.closest('[data-bloque]');
+  if (bl) { const x = prog.bloques.find(y => y.id === bl.dataset.bloque); return x && abrirModalBloque({ bloque: x }); }
   const el = e.target.closest('[data-id]');
   if (el && !el.classList.contains('tenue')) abrir(el.dataset.id);
 };
 function pedirNombre() {
-  const n = prompt('¿Cuál es tu nombre? (como aparece en “Quién la canta”, ej: Hna. Ana)', miNombre);
-  if (n !== null) { miNombre = n.trim(); guardarLocal('miNombre', miNombre); }
-  pintarLista();
+  $('ajNombre').value = miNombre;
+  $('modalAjustes').classList.remove('oculto');
+  setTimeout(() => $('ajNombre').focus(), 50);
 }
 $('buscar').oninput = pintarLista;
-$('filtros').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  filtro = b.dataset.f; hermanoSel = null; $('buscar').value = '';
-  $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x === b));
-  pintarLista();
+$('btnAjustes').onclick = pedirNombre;
+$('ajGuardar').onclick = () => { miNombre = $('ajNombre').value.trim(); guardarLocal('miNombre', miNombre); $('modalAjustes').classList.add('oculto'); pintarLista(); };
+$('modalAjustes').onclick = e => { if (e.target.id === 'modalAjustes') $('modalAjustes').classList.add('oculto'); };
+
+// ---------- BIBLIA ----------
+let bib = null, bLibro = 42, bCap = 3, bSel = null, bResultados = null, bTam = +leerLocal('tamBiblia') || 18;
+try { const g = JSON.parse(leerLocal('bibliaPos') || 'null'); if (g) { bLibro = g[0]; bCap = g[1]; } } catch {}
+async function pintarBiblia() {
+  if (!bib) {
+    $('bRes').innerHTML = '<div class="vacio">Abriendo la Biblia…<br><small>La primera vez se baja (≈1 MB) y luego funciona sin internet.</small></div>';
+    try { bib = await cargarBiblia(); } catch (e) { $('bRes').innerHTML = `<div class="vacio">No se pudo abrir la Biblia.<br>${escaparHTML(e.message)}<br><br><button data-reintentar="1">Reintentar</button></div>`; return; }
+    $('bLibro').innerHTML = bib.map((l, i) => `<option value="${i}">${escaparHTML(l.n)}</option>`).join('');
+  }
+  $('bLibro').value = bLibro;
+  $('bCap').innerHTML = bib[bLibro].c.map((_, i) => `<option value="${i + 1}">Cap. ${i + 1}</option>`).join('');
+  $('bCap').value = bCap;
+  if (bResultados) {
+    const q = normalizar($('bBuscar').value).split(/\s+/).filter(w => w.length > 1);
+    const marcar = t => { let s = escaparHTML(t); for (const w of q) s = s.replace(new RegExp('(' + [...w].map(ch => ({ a: '[aáà]', e: '[eéè]', i: '[iíì]', o: '[oóò]', u: '[uúüù]', n: '[nñ]' }[ch] || ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))).join('') + ')', 'gi'), '<mark>$1</mark>'); return s; };
+    $('bRes').innerHTML = `<div class="tenue" style="margin:0 4px 10px">${bResultados.length}${bResultados.length >= 60 ? '+' : ''} resultado(s) · <a href="#" data-cerrar-res="1">volver al capítulo</a></div>` +
+      (bResultados.map(r => `<div class="tarjeta res" data-cita="${r.libro}|${r.cap}|${r.desde}"><b>${escaparHTML(nombreCita(bib, r))}</b>${marcar(bib[r.libro].c[r.cap - 1][r.desde - 1])}</div>`).join('') || '<div class="vacio">No se encontró nada.</div>');
+  } else {
+    const vs = bib[bLibro].c[bCap - 1];
+    const enSel = v => bSel && v >= bSel[0] && v <= bSel[1];
+    $('bRes').innerHTML = `<div class="tarjeta capitulo" style="font-size:${bTam}px"><h3>${escaparHTML(bib[bLibro].n)} ${bCap}</h3>
+      ${vs.map((t, i) => `<p class="vers ${enSel(i + 1) ? 'sel' : ''}" data-v="${i + 1}" id="v${i + 1}"><sup>${i + 1}</sup>${escaparHTML(t)}</p>`).join('')}</div>
+      <div class="cap-nav"><button data-cap="-1">‹ Anterior</button><button data-cap="1">Siguiente ›</button></div>
+      <div class="ayuda">Toca un versículo para elegirlo, y otro para elegir desde ese hasta ese. Luego agrégalo al orden de un culto.</div>
+      <div style="height:${bSel ? 90 : 0}px"></div>`;
+  }
+  pintarBarraBiblia();
+}
+function citaSel() { return bSel && { libro: bLibro, cap: bCap, desde: bSel[0], hasta: bSel[1] }; }
+function textoSel() { return textoCita(bib, citaSel()).map(x => `${x.v} ${x.t}`).join('\n'); }
+function pintarBarraBiblia() {
+  let barra = $('bBarra');
+  if (!bSel || bResultados || tab !== 'biblia' || pantalla !== 'lista') { barra && barra.remove(); return; }
+  if (!barra) { barra = document.createElement('div'); barra.id = 'bBarra'; barra.className = 'bbarra'; document.body.appendChild(barra); barra.onclick = clicBarraBiblia; }
+  const n = bSel[1] - bSel[0] + 1;
+  barra.innerHTML = `<div class="r">${escaparHTML(nombreCita(bib, citaSel()))}<small>${n} versículo${n > 1 ? 's' : ''}</small></div>
+    <button class="chico" data-b="copiar" title="Copiar">📋</button><button class="prim chico" data-b="culto">📅 Al culto</button><button class="chico" data-b="quitar" title="Quitar selección">✖</button>`;
+}
+async function clicBarraBiblia(e) {
+  const b = e.target.closest('[data-b]'); if (!b) return;
+  if (b.dataset.b === 'quitar') { bSel = null; return pintarBiblia(); }
+  const ref = nombreCita(bib, citaSel()), texto = textoSel();
+  if (b.dataset.b === 'copiar') {
+    try { await navigator.clipboard.writeText(`${texto}\n— ${ref} (RV1909)`); aviso('Copiado ✔'); } catch { aviso('No se pudo copiar', true); }
+  } else abrirModalBloque({ clase: 'versiculo', ref, texto, titulo: ref });
+}
+function irACapitulo(libro, cap, verso) {
+  bLibro = libro; bCap = cap; bResultados = null; bSel = verso ? [verso, verso] : null;
+  guardarLocal('bibliaPos', JSON.stringify([bLibro, bCap]));
+  pintarBiblia();
+  if (verso) setTimeout(() => { const el = $('v' + verso); el && el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+  else window.scrollTo(0, 0);
+}
+$('bLibro').onchange = () => irACapitulo(+$('bLibro').value, 1);
+$('bCap').onchange = () => irACapitulo(bLibro, +$('bCap').value);
+$('bMas').onclick = () => { bTam = Math.min(32, bTam + 2); guardarLocal('tamBiblia', bTam); pintarBiblia(); };
+$('bMenos').onclick = () => { bTam = Math.max(13, bTam - 2); guardarLocal('tamBiblia', bTam); pintarBiblia(); };
+$('bForm').onsubmit = async e => {
+  e.preventDefault();
+  const q = $('bBuscar').value.trim(); if (!q) return;
+  if (!bib) await pintarBiblia();
+  if (!bib) return;
+  const c = leerCita(bib, q);
+  if (c) {
+    bLibro = c.libro; bCap = c.cap; bResultados = null;
+    const entero = c.desde === 1 && c.hasta === bib[c.libro].c[c.cap - 1].length && !/[:.,]\s*\d|\d\s+\d/.test(q);
+    bSel = entero ? null : [c.desde, c.hasta];
+    guardarLocal('bibliaPos', JSON.stringify([bLibro, bCap]));
+    pintarBiblia();
+    if (bSel) setTimeout(() => { const el = $('v' + bSel[0]); el && el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 60);
+    return;
+  }
+  bSel = null; bResultados = buscarEnBiblia(bib, q); pintarBiblia(); window.scrollTo(0, 0);
+};
+$('bRes').onclick = e => {
+  const t = e.target.closest('[data-v],[data-cap],[data-cita],[data-cerrar-res],[data-reintentar]'); if (!t) return;
+  const d = t.dataset;
+  if (d.reintentar) return pintarBiblia();
+  if (d.cerrarRes) { e.preventDefault(); bResultados = null; return pintarBiblia(); }
+  if (d.cita) { const [l, c, v] = d.cita.split('|').map(Number); return irACapitulo(l, c, v); }
+  if (d.cap) {
+    let l = bLibro, c = bCap + +d.cap;
+    if (c < 1) { l = Math.max(0, l - 1); c = bib[l].c.length; } else if (c > bib[l].c.length) { l = Math.min(bib.length - 1, l + 1); c = 1; }
+    return irACapitulo(l, c);
+  }
+  const v = +d.v;
+  if (!bSel) bSel = [v, v];
+  else if (bSel[0] === v && bSel[1] === v) bSel = null;
+  else if (bSel[0] === bSel[1]) bSel = [Math.min(bSel[0], v), Math.max(bSel[0], v)];
+  else bSel = [v, v];
+  // repintar sin mover la pantalla
+  document.querySelectorAll('#bRes .vers').forEach(p => { const n = +p.dataset.v; p.classList.toggle('sel', !!bSel && n >= bSel[0] && n <= bSel[1]); });
+  pintarBarraBiblia();
 };
 
 // ---------- Ver ----------
@@ -634,7 +1015,6 @@ function abrirModalTurno(o) {
   const c = cancionDe(o.cancionId);
   $('mtTitulo').textContent = o.turno ? 'Cambiar quién canta o el tono' : o.cultoId ? 'Agregar alabanza' : 'Agregar a un culto';
   $('mtSub').textContent = o.turno ? `${c ? c.titulo : ''} · ${nombreCulto(cu)}` : cu ? nombreCulto(cu) : c ? c.titulo : '';
-  $('mtCajaCancion').classList.toggle('oculto', !!o.cancionId);
   $('mtCantante').value = o.turno ? (o.turno.cantante || '') : (c && c.cantante) || miNombre || '';
   $('mtTono').value = o.turno ? tonoTurno(o.turno, c) : '';
   $('mtGuardar').textContent = o.turno ? '✔ Guardar' : '✔ Agregar';
@@ -663,12 +1043,13 @@ function sugerirTono() {
 $('mtCantante').oninput = sugerirTono;
 $('mtTono').oninput = () => { mt.tonoManual = true; sugerirTono(); };
 
+const opcionesCultos = sel => cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === sel ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
 function pintarModalTurno() {
   const q = normalizar($('mtBuscar').value);
   let l = canciones.slice().sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
   if (q) l = l.filter(c => normalizar(c.titulo + ' ' + c.cantante).includes(q));
   $('elegirCancionLista').innerHTML = l.map(c => `<div class="opcion ${c.id === mt.cancionId ? 'sel' : ''}" data-c="${c.id}"><span class="tit">${escaparHTML(c.titulo)}</span><span class="tenue" style="font-size:13px">${escaparHTML(c.cantante || '')}</span></div>`).join('') || '<div class="tenue">No hay alabanzas.</div>';
-  $('mtCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mt.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
+  $('mtCultos').innerHTML = opcionesCultos(mt.cultoId);
 }
 $('mtBuscar').oninput = pintarModalTurno;
 $('elegirCancionLista').onclick = e => { const o = e.target.closest('[data-c]'); if (!o) return; mt.cancionId = o.dataset.c; if (!mt.tipo) { mt.tipo = tipoSugerido(mt.cancionId); pintarTipos(); } const c = cancionDe(mt.cancionId); if (c && c.cantante && !$('mtCantante').value) $('mtCantante').value = c.cantante; sugerirTono(); pintarModalTurno(); };
@@ -694,6 +1075,84 @@ $('mtGuardar').onclick = async () => {
   } catch (x) { aviso(x.message, true); }
 };
 
+// ---------- Ventana: bloque del culto ----------
+let mb = {};
+function abrirModalBloque(o) {
+  const prox = cultosOrdenados(prog).proximos;
+  if (o.bloque) o = { ...o, cultoId: o.bloque.cultoId };
+  if (!prox.length && !o.cultoId) { if (confirm('No hay cultos programados. ¿Crear uno ahora?')) abrirModalCulto(null, () => abrirModalBloque(o)); return; }
+  const b = o.bloque || {};
+  mb = { bloque: o.bloque || null, cultoId: o.cultoId || prox[0].id, fijo: !!o.cultoId, clase: b.clase || o.clase || 'oracion', ref: b.ref || o.ref || '', texto: b.texto || o.texto || '' };
+  const cu = prog.cultos.find(x => x.id === mb.cultoId);
+  mb.tipo = o.bloque ? (b.tipo || '') : (cu ? cu.primero : 'adoracion');
+  actualizarNombres();
+  $('mbTitulo').textContent = o.bloque ? 'Cambiar bloque' : 'Agregar al orden del culto';
+  $('mbSub').textContent = mb.fijo && cu ? nombreCulto(cu) : '';
+  $('mbClases').innerHTML = Object.entries(CLASES).map(([k, v]) => `<button data-clase="${k}">${v.icono} ${v.nombre}</button>`).join('');
+  $('mbNombre').value = b.titulo || o.titulo || (o.bloque ? '' : CLASES[mb.clase].nombre);
+  $('mbCita').value = mb.ref; $('mbTexto').textContent = mb.texto;
+  $('mbResp').value = b.responsable || ''; $('mbNota').value = b.nota || '';
+  $('mbBorrar').classList.toggle('oculto', !o.bloque);
+  $('mbCajaCulto').classList.toggle('oculto', mb.fijo);
+  pintarModalBloque();
+  $('modalBloque').classList.remove('oculto');
+}
+function pintarModalBloque() {
+  $('mbClases').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x.dataset.clase === mb.clase));
+  $('mbTipos').querySelectorAll('button').forEach(x => x.classList.toggle('sel', x.dataset.tipo === mb.tipo));
+  $('mbCajaVers').classList.toggle('oculto', mb.clase !== 'versiculo');
+  $('mbCultos').innerHTML = opcionesCultos(mb.cultoId);
+}
+$('mbClases').onclick = e => {
+  const b = e.target.closest('[data-clase]'); if (!b) return;
+  const antes = CLASES[mb.clase].nombre;
+  mb.clase = b.dataset.clase;
+  // si el título era el nombre de la clase anterior, se cambia solo
+  if (!$('mbNombre').value.trim() || $('mbNombre').value.trim() === antes) $('mbNombre').value = mb.clase === 'versiculo' && mb.ref ? mb.ref : CLASES[mb.clase].nombre;
+  pintarModalBloque();
+};
+$('mbTipos').onclick = e => { const b = e.target.closest('[data-tipo]'); if (b) { mb.tipo = b.dataset.tipo; pintarModalBloque(); } };
+$('mbCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (o) { mb.cultoId = o.dataset.cu; pintarModalBloque(); } };
+let mbEspera;
+$('mbCita').oninput = () => {
+  clearTimeout(mbEspera);
+  mbEspera = setTimeout(async () => {
+    const q = $('mbCita').value.trim();
+    if (!q) { mb.ref = ''; mb.texto = ''; $('mbTexto').textContent = ''; return; }
+    try {
+      const b = await cargarBiblia(), c = leerCita(b, q);
+      if (!c) { $('mbTexto').textContent = 'No encuentro esa cita. Ej: Juan 3:16-18'; mb.texto = ''; return; }
+      const antes = mb.ref;
+      mb.ref = nombreCita(b, c); mb.texto = textoCita(b, c).map(x => `${x.v} ${x.t}`).join('\n');
+      $('mbTexto').textContent = mb.texto;
+      const t = $('mbNombre').value.trim();
+      if (!t || t === antes || t === CLASES.versiculo.nombre) $('mbNombre').value = mb.ref;
+    } catch { $('mbTexto').textContent = 'Sin internet: no se pudo abrir la Biblia.'; }
+  }, 350);
+};
+$('mbCancelar').onclick = () => $('modalBloque').classList.add('oculto');
+$('modalBloque').onclick = e => { if (e.target.id === 'modalBloque') $('modalBloque').classList.add('oculto'); };
+$('mbGuardar').onclick = async () => {
+  if (!mb.cultoId) return aviso('Elige el culto', true);
+  const titulo = $('mbNombre').value.trim() || CLASES[mb.clase].nombre;
+  const esVers = mb.clase === 'versiculo';
+  const cambioParte = mb.bloque && (mb.bloque.tipo || '') !== mb.tipo;
+  try {
+    await API.guardarBloque({ id: mb.bloque && mb.bloque.id, cultoId: mb.cultoId, clase: mb.clase, titulo, responsable: $('mbResp').value, nota: $('mbNota').value,
+      ref: esVers ? mb.ref : '', texto: esVers ? mb.texto : '', tipo: mb.tipo, orden: mb.bloque && !cambioParte ? mb.bloque.orden : Date.now() });
+    prog = await API.programa();
+    $('modalBloque').classList.add('oculto');
+    aviso(mb.bloque ? 'Actualizado ✔' : 'Agregado al culto ✔');
+    if (!mb.bloque && esVers && tab === 'biblia') { bSel = null; }
+    pintarLista();
+  } catch (x) { aviso(x.message, true); }
+};
+$('mbBorrar').onclick = async () => {
+  if (!mb.bloque || !confirm('¿Quitar este bloque del culto?')) return;
+  await API.borrarBloque(mb.bloque.id); prog = await API.programa();
+  $('modalBloque').classList.add('oculto'); aviso('Quitado del culto'); pintarLista();
+};
+
 // ---------- Ventana: poner a un hermano en un culto ----------
 let mp = {};
 function abrirModalPart(o) {
@@ -713,9 +1172,7 @@ function abrirModalPart(o) {
   $('modalPart').classList.remove('oculto');
   if (!o.nombre) setTimeout(() => $('mpNombre').focus(), 50);
 }
-function pintarModalPart() {
-  $('mpCultos').innerHTML = cultosOrdenados(prog).proximos.map(cu => `<div class="opcion ${cu.id === mp.cultoId ? 'sel' : ''}" data-cu="${cu.id}"><span class="tit">${escaparHTML(fechaBonita(cu.fecha))}</span><span class="tenue" style="font-size:13px">${escaparHTML(cu.nombre)}</span></div>`).join('');
-}
+function pintarModalPart() { $('mpCultos').innerHTML = opcionesCultos(mp.cultoId); }
 $('mpRolesRapidos').onclick = e => { const b = e.target.closest('[data-rol]'); if (b) $('mpRol').value = b.dataset.rol; };
 $('mpCultos').onclick = e => { const o = e.target.closest('[data-cu]'); if (o) { mp.cultoId = o.dataset.cu; pintarModalPart(); } };
 $('mpCancelar').onclick = () => $('modalPart').classList.add('oculto');
@@ -734,28 +1191,56 @@ $('mpGuardar').onclick = async () => {
   } catch (x) { aviso(x.message, true); }
 };
 
-// ---------- Ventana: nuevo culto ----------
-let mcEditando = null, mcDespues = null, mcPrimero = 'adoracion';
+// ---------- Ventana: culto (nuevo / cambiar / plantillas) ----------
+let mcEditando = null, mcDespues = null, mcPrimero = 'adoracion', mcPl = '';
 function pintarPrimero() { $('mcPrimero').querySelectorAll('button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === mcPrimero)); }
 $('mcPrimero').onclick = e => { const b = e.target.closest('[data-tipo]'); if (b) { mcPrimero = b.dataset.tipo; pintarPrimero(); } };
-function abrirModalCulto(cu, despues) {
-  mcEditando = cu; mcDespues = despues || null;
+function pintarPlantillasCulto() {
+  const pls = prog.plantillas || [];
+  $('mcCajaPl').classList.toggle('oculto', !!mcEditando || !pls.length);
+  $('mcPlantillas').innerHTML = `<button data-pl="" class="${mcPl ? '' : 'sel'}">Ninguna</button>` + pls.map(p => `<button data-pl="${p.id}" class="${mcPl === p.id ? 'sel' : ''}">📋 ${escaparHTML(p.nombre)}</button>`).join('');
+}
+$('mcPlantillas').onclick = e => {
+  const b = e.target.closest('[data-pl]'); if (!b) return;
+  mcPl = b.dataset.pl;
+  const p = prog.plantillas.find(x => x.id === mcPl);
+  if (p) { $('mcNombre').value = p.cultoNombre || p.nombre; mcPrimero = p.primero; pintarPrimero(); }
+  pintarPlantillasCulto();
+};
+function abrirModalCulto(cu, despues, fecha, plantillaId) {
+  mcEditando = cu; mcDespues = despues || null; mcPl = '';
   $('mcTitulo').textContent = cu ? 'Cambiar culto' : 'Nuevo culto';
-  $('mcFecha').value = cu ? cu.fecha : hoyISO();
+  $('mcFecha').value = cu ? cu.fecha : (fecha || hoyISO());
   $('mcNombre').value = cu ? cu.nombre : 'Culto de alabanza';
   $('mcBorrar').classList.toggle('oculto', !cu);
-  mcPrimero = cu && cu.primero === 'coros' ? 'coros' : 'adoracion'; pintarPrimero();
+  $('mcCajaGuardarPl').classList.toggle('oculto', !cu);
+  mcPrimero = cu && cu.primero === 'coros' ? 'coros' : 'adoracion';
+  const p = plantillaId && prog.plantillas.find(x => x.id === plantillaId);
+  if (p) { mcPl = p.id; $('mcNombre').value = p.cultoNombre || p.nombre; mcPrimero = p.primero; }
+  pintarPrimero(); pintarPlantillasCulto();
   $('modalCulto').classList.remove('oculto');
+}
+// crea un culto y, si hay plantilla, le pone sus bloques y su equipo
+async function crearCulto(fecha, nombre, primero, plantilla) {
+  const cu = await API.guardarCulto({ fecha, nombre, primero });
+  if (plantilla) {
+    let orden = Date.now();
+    for (const b of plantilla.bloques) await API.guardarBloque({ ...b, titulo: b.titulo || claseDe(b).nombre, cultoId: cu.id, orden: orden++ });
+    for (const x of plantilla.equipo) if (x.nombre) await API.guardarParticipacion({ cultoId: cu.id, nombre: x.nombre, rol: x.rol });
+  }
+  return cu;
 }
 $('mcCancelar').onclick = () => $('modalCulto').classList.add('oculto');
 $('modalCulto').onclick = e => { if (e.target.id === 'modalCulto') $('modalCulto').classList.add('oculto'); };
 $('mcGuardar').onclick = async () => {
   if (!$('mcFecha').value) return aviso('Elige la fecha', true);
   try {
-    await API.guardarCulto({ id: mcEditando && mcEditando.id, fecha: $('mcFecha').value, nombre: $('mcNombre').value, primero: mcPrimero });
+    if (mcEditando) await API.guardarCulto({ id: mcEditando.id, fecha: $('mcFecha').value, nombre: $('mcNombre').value, primero: mcPrimero });
+    else await crearCulto($('mcFecha').value, $('mcNombre').value, mcPrimero, prog.plantillas.find(x => x.id === mcPl));
     prog = await API.programa();
     $('modalCulto').classList.add('oculto');
     aviso('Culto guardado ✔');
+    if (!mcEditando && tab === 'inicio') diaSel = $('mcFecha').value;
     pintarLista();
     if (mcDespues) mcDespues();
   } catch (x) { aviso(x.message, true); }
@@ -764,6 +1249,64 @@ $('mcBorrar').onclick = async () => {
   if (!mcEditando || !confirm(`¿Borrar el culto “${nombreCulto(mcEditando)}”?\n(Las alabanzas no se borran)`)) return;
   await API.borrarCulto(mcEditando.id); prog = await API.programa();
   $('modalCulto').classList.add('oculto'); aviso('Culto borrado'); pintarLista();
+};
+$('mcGuardarPl').onclick = async () => {
+  const cu = mcEditando; if (!cu) return;
+  const nombre = prompt('Nombre de la plantilla (ej: Viernes – Noche de alabanza)', cu.nombre);
+  if (!nombre || !nombre.trim()) return;
+  const bloques = items(cu.id).filter(x => x.es === 'bloque').map(b => ({ clase: b.clase, titulo: b.clase === 'versiculo' ? 'Versículo' : b.titulo, responsable: b.responsable, nota: b.nota, tipo: b.tipo }));
+  const ps = participacionesDe(prog, cu.id);
+  const equipo = ps.length && confirm(`¿Guardar también el equipo (${ps.length} hermano(s)) en la plantilla?\n\nAceptar = sí, con el equipo · Cancelar = solo el orden`) ? ps.map(x => ({ nombre: x.nombre, rol: x.rol })) : [];
+  const ya = prog.plantillas.find(p => normalizar(p.nombre) === normalizar(nombre.trim()));
+  if (ya && !confirm(`Ya hay una plantilla “${ya.nombre}”. ¿Reemplazarla?`)) return;
+  try {
+    await API.guardarPlantilla({ id: ya && ya.id, nombre, cultoNombre: $('mcNombre').value || cu.nombre, primero: mcPrimero, bloques, equipo });
+    prog = await API.programa();
+    aviso('Plantilla guardada ✔'); pintarLista();
+  } catch (x) { aviso(x.message, true); }
+};
+
+// ---------- Ventana: fin de semana ----------
+function abrirModalFinde() {
+  const pls = prog.plantillas || [];
+  // el fin de semana en curso (si hoy es sábado o domingo) o el próximo
+  const hoy = hoyISO(), dsem = fechaDe(hoy).getDay();
+  let vie = dsem === 6 ? sumarDias(hoy, -1) : dsem === 0 ? sumarDias(hoy, -2) : hoy;
+  while (fechaDe(vie).getDay() !== 5) vie = sumarDias(vie, 1);
+  const dias = [['viernes', vie], ['sabado', sumarDias(vie, 1)], ['domingo', sumarDias(vie, 2)]];
+  $('mfDias').innerHTML = dias.map(([nom, f], i) => {
+    const pl = pls.find(p => normalizar(p.nombre).includes(nom)) || null;
+    const yaHay = prog.cultos.some(c => c.fecha === f), pasado = f < hoy;
+    return `<div class="tarjeta finde-dia" data-i="${i}">
+      <label class="chk"><input type="checkbox" ${yaHay || pasado ? '' : 'checked'}> <b>${escaparHTML(fechaBonita(f))}</b>${yaHay ? ' <small class="tenue">(ya tiene culto)</small>' : pasado ? ' <small class="tenue">(ya pasó)</small>' : ''}</label>
+      <div class="fila"><input type="date" value="${f}"><select>${'<option value="">Sin plantilla</option>' + pls.map(p => `<option value="${p.id}" ${pl && pl.id === p.id ? 'selected' : ''}>📋 ${escaparHTML(p.nombre)}</option>`).join('')}</select></div>
+      <input placeholder="Nombre del culto" value="${escaparHTML((pl && pl.cultoNombre) || 'Culto de alabanza')}">
+    </div>`;
+  }).join('') + (pls.length ? '' : '<div class="ayuda">Consejo: guarda una plantilla para cada día (ej: “Viernes”, “Sábado”, “Domingo”) y aquí se elegirán solas.</div>');
+  $('modalFinde').classList.remove('oculto');
+}
+$('mfDias').onchange = e => {
+  const sel = e.target.closest('select'); if (!sel) return;
+  const p = prog.plantillas.find(x => x.id === sel.value);
+  if (p) sel.closest('.finde-dia').querySelector('input:not([type])').value = p.cultoNombre || p.nombre;
+};
+$('mfCancelar').onclick = () => $('modalFinde').classList.add('oculto');
+$('modalFinde').onclick = e => { if (e.target.id === 'modalFinde') $('modalFinde').classList.add('oculto'); };
+$('mfGuardar').onclick = async () => {
+  const filas = [...$('mfDias').querySelectorAll('.finde-dia')].filter(d => d.querySelector('input[type=checkbox]').checked);
+  if (!filas.length) return aviso('Marca al menos un día', true);
+  $('mfGuardar').disabled = true;
+  try {
+    for (const d of filas) {
+      const fecha = d.querySelector('input[type=date]').value, plId = d.querySelector('select').value;
+      const p = prog.plantillas.find(x => x.id === plId);
+      await crearCulto(fecha, d.querySelector('input:not([type])').value || 'Culto de alabanza', p ? p.primero : 'adoracion', p);
+    }
+    prog = await API.programa();
+    $('modalFinde').classList.add('oculto');
+    aviso(`${filas.length} culto(s) creados ✔`); pintarLista();
+  } catch (x) { aviso(x.message, true); }
+  $('mfGuardar').disabled = false;
 };
 
 // ---------- Editor ----------
@@ -776,8 +1319,7 @@ function editar(c) {
   $('fNotas').value = c ? c.notas : '';
   $('textoLetra').value = c ? c.letra : '';
   $('btnBorrar').classList.toggle('oculto', !c);
-  const nombres = [...new Set(canciones.map(x => x.cantante).concat(prog.turnos.map(t => t.cantante)).filter(Boolean))].sort();
-  $('listaCantantes').innerHTML = nombres.map(n => `<option value="${escaparHTML(n)}">`).join('');
+  actualizarNombres();
   const prox = cultosOrdenados(prog).proximos;
   $('cajaCultoEditor').classList.toggle('oculto', !!c || !prox.length);
   $('fCulto').innerHTML = '<option value="">— Ninguno por ahora —</option>' + prox.map(cu => `<option value="${cu.id}">${escaparHTML(nombreCulto(cu))}</option>`).join('');
@@ -818,18 +1360,16 @@ $('btnBorrar').onclick = async () => {
 };
 
 // ---------- Inicio y tiempo real ----------
+function hayModalAbierto() { return [...document.querySelectorAll('.modal')].some(m => !m.classList.contains('oculto')); }
 function repintar() {
   if (!$('modalTurno').classList.contains('oculto')) pintarModalTurno();
-  if (pantalla === 'lista') pintarLista();
+  // no se repinta la Biblia ni detrás de una ventana abierta (para no perder lo que se está haciendo)
+  if (pantalla === 'lista' && tab !== 'biblia' && !hayModalAbierto()) pintarLista();
   if (pantalla === 'ver' && actual) { actual = cancionDe(actual.id) || actual; pintarVer(); }
 }
 async function cargar() {
   try { [canciones, estado, prog] = await Promise.all([API.canciones(), API.estado(), API.programa()]); } catch {}
-  if (cultosOrdenados(prog).proximos.some(cu => cu.fecha === hoyISO())) {
-    filtro = 'hoy';
-    $('filtros').querySelectorAll('button').forEach(x => x.classList.toggle('activo', x.dataset.f === 'hoy'));
-  }
-  pintarLista();
+  irATab('inicio');
 }
 escucharEventos({
   conexion: ok => $('conexion').classList.toggle('on', ok),

@@ -6,14 +6,16 @@
 //  IMPORTANTE: cada vez que cambies algún archivo de la app,
 //  sube el número de VERSION para que los teléfonos se actualicen.
 // =============================================================
-const VERSION = 'alabanzas-v3';
+const VERSION = 'alabanzas-v4';
 
+// (biblia-rv1909.json no va aquí: se guarda sola la primera vez que se abre la Biblia)
 const ARCHIVOS = [
   './',
   'index.html',
   'musicos.html',
   'estilo.css',
   'comun.js',
+  'biblia.js',
   'nube.js',
   'config.js',
   'instalar.js',

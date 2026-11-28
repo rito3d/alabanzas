@@ -92,21 +92,26 @@ onSnapshot(colCanciones, { includeMetadataChanges: true }, snap => {
 }, e => { console.error(e); listoCanciones(); disparar('conexion', false); });
 
 function programaVisible() {
-  const cultos = [], turnos = [], participaciones = [];
+  const cultos = [], turnos = [], participaciones = [], bloques = [], plantillas = [];
   for (const [id, d] of progDocs) {
     if (d.borrada) continue;
     if (id.startsWith('c_')) cultos.push({ id, fecha: d.fecha || '', nombre: d.nombre || 'Culto', primero: d.primero === 'coros' ? 'coros' : 'adoracion', actualizada: d.actualizada || '' });
     else if (id.startsWith('t_')) turnos.push({ id, cultoId: d.cultoId, cancionId: d.cancionId, cantante: d.cantante || '', tono: d.tono || '', tipo: d.tipo || '', orden: Number(d.orden) || 0, actualizada: d.actualizada || '' });
+    // bloques del culto que no son alabanzas: oración, ofrenda, predicación, versículo…
+    else if (id.startsWith('b_')) bloques.push({ id, cultoId: d.cultoId, clase: d.clase || 'otro', titulo: d.titulo || '', responsable: d.responsable || '', nota: d.nota || '', ref: d.ref || '', texto: d.texto || '', tipo: d.tipo || '', orden: Number(d.orden) || 0, actualizada: d.actualizada || '' });
+    // plantillas para crear cultos con un toque
+    else if (id.startsWith('pl_')) plantillas.push({ id, nombre: d.nombre || 'Plantilla', cultoNombre: d.cultoNombre || '', primero: d.primero === 'coros' ? 'coros' : 'adoracion', bloques: Array.isArray(d.bloques) ? d.bloques : [], equipo: Array.isArray(d.equipo) ? d.equipo : [], actualizada: d.actualizada || '' });
     else participaciones.push({ id, cultoId: d.cultoId, nombre: d.nombre || '', rol: d.rol || '', actualizada: d.actualizada || '' });
   }
   const ids = new Set(cultos.map(c => c.id));
-  return { cultos: cultos.sort((a, b) => a.fecha.localeCompare(b.fecha)), turnos: turnos.filter(t => ids.has(t.cultoId) && canciones.some(c => c.id === t.cancionId)), participaciones: participaciones.filter(x => ids.has(x.cultoId)) };
+  return { cultos: cultos.sort((a, b) => a.fecha.localeCompare(b.fecha)), turnos: turnos.filter(t => ids.has(t.cultoId) && canciones.some(c => c.id === t.cancionId)), participaciones: participaciones.filter(x => ids.has(x.cultoId)),
+    bloques: bloques.filter(b => ids.has(b.cultoId)), plantillas: plantillas.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')) };
 }
 onSnapshot(colEstado, snap => {
   let cambioProg = false, cambioEstado = false;
   for (const ch of snap.docChanges()) {
     const id = ch.doc.id, d = ch.doc.data() || {};
-    if (/^(c_|t_|p_)/.test(id)) { if (ch.type === 'removed') progDocs.delete(id); else progDocs.set(id, d); cambioProg = true; }
+    if (/^(c_|t_|p_|b_|pl_)/.test(id)) { if (ch.type === 'removed') progDocs.delete(id); else progDocs.set(id, d); cambioProg = true; }
     else if (id === 'envivo') { estado.cancionId = d.cancionId || null; estado.seccion = +d.seccion || 0; estado.cantante = d.cantante || ''; estado.tono = d.tono || ''; cambioEstado = true; }
   }
   if (cambioProg) disparar('programa', {});
@@ -157,6 +162,24 @@ window.API = {
     return guardarProg(x.id || nuevoId('p_'), { cultoId: x.cultoId, nombre, rol: String(x.rol || '').trim().slice(0, 40), borrada: false });
   },
   async borrarParticipacion(id) { const d = progDocs.get(id); if (d) guardarProg(id, { cultoId: d.cultoId, nombre: d.nombre || '', rol: d.rol || '', borrada: true }); return { ok: true }; },
+  async guardarBloque(b) {
+    const antes = b.id && progDocs.get(b.id);
+    const orden = b.orden !== undefined && b.orden !== null && b.orden !== '' ? Math.round(+b.orden) : (antes ? antes.orden : Date.now());
+    const titulo = String(b.titulo || '').trim().slice(0, 120);
+    if (!titulo) throw new Error('Escribe el nombre del bloque');
+    return guardarProg(b.id || nuevoId('b_'), { cultoId: b.cultoId, clase: String(b.clase || 'otro').slice(0, 20), titulo, responsable: String(b.responsable || '').trim().slice(0, 80),
+      nota: String(b.nota || '').trim().slice(0, 300), ref: String(b.ref || '').trim().slice(0, 80), texto: String(b.texto || '').slice(0, 6000),
+      tipo: ['adoracion', 'coros'].includes(b.tipo) ? b.tipo : '', orden, borrada: false });
+  },
+  async borrarBloque(id) { const d = progDocs.get(id); if (d) guardarProg(id, { ...d, borrada: true }); return { ok: true }; },
+  async guardarPlantilla(p) {
+    const nombre = String(p.nombre || '').trim().slice(0, 60);
+    if (!nombre) throw new Error('Ponle un nombre a la plantilla');
+    const bloques = (p.bloques || []).slice(0, 30).map(b => ({ clase: String(b.clase || 'otro').slice(0, 20), titulo: String(b.titulo || '').slice(0, 120), responsable: String(b.responsable || '').slice(0, 80), nota: String(b.nota || '').slice(0, 300), tipo: ['adoracion', 'coros'].includes(b.tipo) ? b.tipo : '' }));
+    const equipo = (p.equipo || []).slice(0, 40).map(x => ({ nombre: String(x.nombre || '').slice(0, 80), rol: String(x.rol || '').slice(0, 40) }));
+    return guardarProg(p.id || nuevoId('pl_'), { nombre, cultoNombre: String(p.cultoNombre || '').trim().slice(0, 80), primero: p.primero === 'coros' ? 'coros' : 'adoracion', bloques, equipo, borrada: false });
+  },
+  async borrarPlantilla(id) { const d = progDocs.get(id); if (d) guardarProg(id, { ...d, borrada: true }); return { ok: true }; },
   async canciones() { await primeraCarga; return canciones.slice(); },
   async estado() { return { ...estado }; },
   async cambiarEstado(c) {

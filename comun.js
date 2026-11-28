@@ -103,7 +103,25 @@ function partesDe(lista) {
   for (const t of lista) { const k = t.tipo || ''; if (!partes.length || partes[partes.length - 1].tipo !== k) partes.push({ tipo: k, turnos: [] }); partes[partes.length - 1].turnos.push(t); }
   return partes;
 }
-const nombreTipo = k => k && TIPOS[k] ? TIPOS[k].icono + ' ' + TIPOS[k].nombre : '• Sin clasificar';
+const nombreTipo = k => k && TIPOS[k] ? TIPOS[k].icono + ' ' + TIPOS[k].nombre : '📌 Al final';
+
+// ---------- Bloques del culto (lo que no es alabanza) ----------
+const CLASES = {
+  bienvenida: { nombre: 'Bienvenida', icono: '👋' }, oracion: { nombre: 'Oración', icono: '🙏' },
+  versiculo: { nombre: 'Versículo', icono: '📖' }, predicacion: { nombre: 'Predicación', icono: '🎙️' },
+  ofrenda: { nombre: 'Ofrenda', icono: '💝' }, anuncios: { nombre: 'Anuncios', icono: '📢' },
+  santa_cena: { nombre: 'Santa cena', icono: '🍞' }, testimonio: { nombre: 'Testimonio', icono: '💬' },
+  otro: { nombre: 'Otro', icono: '•' }
+};
+const claseDe = b => CLASES[b && b.clase] || CLASES.otro;
+// alabanzas y bloques juntos, en el orden del culto. Cada elemento lleva "es": 'turno' o 'bloque'
+function itemsDe(prog, cultoId, hayCancion) {
+  const cu = ((prog && prog.cultos) || []).find(c => c.id === cultoId);
+  const rango = ordenTipos(cu), r = t => { const i = rango.indexOf(t.tipo || ''); return i < 0 ? 2 : i; };
+  const ts = ((prog && prog.turnos) || []).filter(t => t.cultoId === cultoId && (!hayCancion || hayCancion(t.cancionId))).map(t => ({ ...t, es: 'turno' }));
+  const bs = ((prog && prog.bloques) || []).filter(b => b.cultoId === cultoId).map(b => ({ ...b, es: 'bloque' }));
+  return ts.concat(bs).sort((a, b) => r(a) - r(b) || a.orden - b.orden);
+}
 
 // Conexión en vivo con reconexión automática
 function escucharEventos(manejadores) {
